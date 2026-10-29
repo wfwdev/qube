@@ -5,13 +5,14 @@
 // - Firebase API hívásokba nem nyúl (azokat a Firestore SDK kezeli offline)
 // Új kiadásnál elég a VERSION-t emelni → megjelenik a "Frissítés" gomb.
 // ============================================================
-const VERSION = 'qube-v2.0.2';
+const VERSION = 'qube-v2.1.0';
 const CACHE = `${VERSION}`;
 
 const APP_SHELL = [
     './',
     './index.html',
     './admin.html',
+    './ic.html',
     './style.css',
     './manifest.json',
     './icons/icon.svg',
@@ -25,7 +26,17 @@ const APP_SHELL = [
     './js/ui.js',
     './js/session.js',
     './js/home.js',
-    './js/admin.js'
+    './js/admin.js',
+    './js/ic.js'
+];
+
+// Külső könyvtárak előre letöltve (offline használathoz) – ha nem sikerül, nem akadályozza a telepítést
+const CDN_PRECACHE = [
+    'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'
 ];
 
 const CDN_HOSTS = [
@@ -37,7 +48,10 @@ const CDN_HOSTS = [
 ];
 
 self.addEventListener('install', (e) => {
-    e.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_SHELL)));
+    e.waitUntil(caches.open(CACHE).then(async (c) => {
+        await c.addAll(APP_SHELL);
+        await Promise.allSettled(CDN_PRECACHE.map((u) => c.add(u)));
+    }));
 });
 
 self.addEventListener('activate', (e) => {

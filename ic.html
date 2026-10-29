@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>IC generátor · Qube</title>
+    <meta name="theme-color" content="#ff5f00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body data-page="ic" data-title="IC generátor" data-perm="ic.use">
+    <script>if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-mode');</script>
+
+    <main class="container app-main">
+        <div class="pill-nav hidden" id="icTabs">
+            <button data-tab="gen" class="active">Generálás</button>
+            <button data-tab="list" class="hidden">Lista</button>
+            <button data-tab="stats" class="hidden">Statisztika</button>
+        </div>
+
+        <!-- GENERÁLÁS -->
+        <section id="tab-gen">
+            <div class="minimal-card">
+                <div class="pill-nav mb-4" id="genAreas"></div>
+                <label class="form-label" for="genSelect">IC kiválasztása</label>
+                <select id="genSelect" class="form-select form-select-lg mb-3"></select>
+                <label class="form-label" for="genAmount">Mennyiség (max. <span id="genMax"></span>)</label>
+                <input type="number" id="genAmount" class="form-control form-control-lg mb-4" placeholder="Pl. 1500" inputmode="numeric" min="1">
+                <button class="btn btn-primary btn-lg w-100" id="genBtn">Generálás</button>
+            </div>
+            <div class="sync-line hidden" id="syncLine"></div>
+        </section>
+
+        <!-- IC LISTA (ic.manage) -->
+        <section id="tab-list" class="hidden">
+            <div class="chip-row mb-3" id="listFilters"></div>
+            <div class="minimal-card p-2" id="icList"></div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light flex-grow-1 dashed" id="icAddBtn">+ Új IC</button>
+                <button class="btn btn-light flex-grow-1 dashed" id="icImportBtn">⇪ Importálás</button>
+            </div>
+        </section>
+
+        <!-- STATISZTIKA (ic.stats) -->
+        <section id="tab-stats" class="hidden">
+            <div class="pill-nav" id="statModes">
+                <button data-mode="d" class="active">Napi</button>
+                <button data-mode="m">Havi</button>
+            </div>
+            <div class="period-nav mb-3">
+                <button class="nav-arrow" id="statPrev" aria-label="Előző">‹</button>
+                <div class="fw-bold" id="statLabel">–</div>
+                <button class="nav-arrow" id="statNext" aria-label="Következő">›</button>
+            </div>
+            <div class="stat-grid mb-3">
+                <div class="stat-tile"><div class="text-muted tiny">Generálások</div><div class="stat-num" id="statCount">0</div></div>
+                <div class="stat-tile"><div class="text-muted tiny">Darab összesen</div><div class="stat-num" id="statAmount">0</div></div>
+            </div>
+            <div class="minimal-card">
+                <h6 class="fw-bold mb-3">IC-nként</h6>
+                <div id="statByIc"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Teljes képernyős QR -->
+    <div class="qr-fullscreen hidden" id="qrFullscreen">
+        <div class="qr-scroll-area">
+            <div class="qr-meta" id="qrMeta"></div>
+            <div class="qr-large-box"><div id="qr1"></div><div class="qr-label" id="qr1Text"></div></div>
+            <div class="qr-large-box"><div id="qr2"></div><div class="qr-label" id="qr2Text"></div></div>
+        </div>
+        <div class="qr-footer"><button class="btn btn-primary btn-lg w-100" id="qrClose">Bezárás</button></div>
+    </div>
+
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/ic.js"></script>
+</body>
+</html>

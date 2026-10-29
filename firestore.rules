@@ -104,10 +104,54 @@ service cloud.firestore {
         && request.resource.data.permissions is list;
     }
 
+    // ============================================================
+    // IC GENERÁTOR
+    // ============================================================
+    function validArea(a) { return a in ['ESS', 'WSS']; }
+    function validAmount(n) { return n is int && n >= 1 && n <= 5000; }
+
+    // IC lista – a dokumentum azonosítója maga a 13 karakteres IC szám
+    match /ic_numbers/{code} {
+      allow read: if can('ic.use');
+      allow create, update: if can('ic.manage')
+        && code.matches('^[A-Z0-9]{13}$')
+        && request.resource.data.keys().hasOnly(['code', 'area', 'createdAt', 'createdBy'])
+        && request.resource.data.code == code
+        && validArea(request.resource.data.area)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow delete: if can('ic.manage');
+    }
+
+    // Generálási napló – csak létrehozható, módosítani nem lehet
+    match /ic_logs/{id} {
+      allow create: if can('ic.use')
+        && request.resource.data.keys().hasOnly(['icCode', 'area', 'amount', 'uid', 'name', 'empId', 'clientTime', 'day', 'ts'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.icCode.matches('^[A-Z0-9]{13}$')
+        && validArea(request.resource.data.area)
+        && validAmount(request.resource.data.amount)
+        && request.resource.data.ts == request.time;
+      // Saját napló ellenőrzése (újraküldésnél: felment-e már)
+      allow get: if signedIn() && (resource == null || resource.data.uid == request.auth.uid);
+      allow list: if can('ic.stats');
+      allow delete: if isAdmin();
+    }
+
+    // Napi (d_ÉÉÉÉ-HH-NN) és havi (m_ÉÉÉÉ-HH) összesítők – csak növelhetők
+    match /ic_stats/{id} {
+      allow read: if can('ic.stats');
+      allow create: if can('ic.use')
+        && id.matches('^(d_[0-9]{4}-[0-9]{2}-[0-9]{2}|m_[0-9]{4}-[0-9]{2})$')
+        && request.resource.data.keys().hasOnly(['count', 'amount', 'byIc'])
+        && request.resource.data.count == 1
+        && validAmount(request.resource.data.amount);
+      allow update: if can('ic.use')
+        && request.resource.data.keys().hasOnly(['count', 'amount', 'byIc'])
+        && request.resource.data.count == resource.data.count + 1
+        && validAmount(request.resource.data.amount - resource.data.amount);
+    }
+
     // ---------- Modulok (következő lépésekben) ----------
-    // match /ic_numbers/{id} {
-    //   allow read: if can('ic.use');
-    //   allow write: if can('ic.manage');
-    // }
+    // MES terminál, csomagoló kód
   }
 }
