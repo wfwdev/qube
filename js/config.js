@@ -12,12 +12,13 @@ export const APP = {
 // ⚠️ Ide az ÚJ Firebase projekt webes konfigurációja kerül
 // (Firebase konzol → Projektbeállítások → Saját alkalmazások → SDK config)
 export const FIREBASE_CONFIG = {
-    apiKey: 'IDE_JON_AZ_API_KEY',
-    authDomain: 'PROJEKT-ID.firebaseapp.com',
-    projectId: 'PROJEKT-ID',
-    storageBucket: 'PROJEKT-ID.firebasestorage.app',
-    messagingSenderId: '000000000000',
-    appId: '1:000000000000:web:0000000000000000'
+  apiKey: "AIzaSyAtXpjiTnSkzH6A40DPJxx3SEffT2kmFZw",
+  authDomain: "qube-a6e09.firebaseapp.com",
+  projectId: "qube-a6e09",
+  storageBucket: "qube-a6e09.firebasestorage.app",
+  messagingSenderId: "417361318447",
+  appId: "1:417361318447:web:95d257e2e121ffb5d0acda",
+  measurementId: "G-4GZGH3EYH0"
 };
 
 // ------------------------------------------------------------
