@@ -14,7 +14,6 @@ const setting = (key, def) => {
     const v = localStorage.getItem(key);
     return v === null ? def : v === 'true';
 };
-const isHome = () => document.body.dataset.page === 'home';
 
 // ---------- Téma (az oldal tetején lévő inline script már beállítja) ----------
 const applyTheme = (theme) => {
@@ -109,17 +108,10 @@ document.addEventListener('visibilitychange', () => {
 // ---------- Váz beszúrása (betöltéskor azonnal) ----------
 const injectShell = () => {
     const title = document.body.dataset.title || APP.name;
-    const left = isHome()
-        ? ''
-        : `<button class="nav-btn" onclick="location.href='index.html'" aria-label="Vissza">←</button>`;
-
     document.body.insertAdjacentHTML('afterbegin', `
     <div id="flashOverlay"></div>
     <nav class="app-navbar">
-        <div class="d-flex align-items-center gap-2">
-            ${left}
-            <div class="navbar-title">${esc(title)}</div>
-        </div>
+        <div class="navbar-title">${esc(title)}</div>
         <div class="d-flex align-items-center gap-2">
             <button id="updateBtn" class="update-btn hidden">🔄 Frissítés</button>
             <button id="themeToggle" class="nav-btn" aria-label="Téma">🌙</button>
@@ -213,25 +205,57 @@ export const closeSideMenu = () => {
     $('#sideOverlay')?.classList.remove('open');
 };
 
-// ---------- Alsó menü (a session után, jogosultság szerint) ----------
-export const renderChrome = (session) => {
-    sessionRef = session;
-    const page = document.body.dataset.page;
-    const items = [
-        { id: 'home', icon: '🏠', label: 'Kezdőlap', go: 'index.html' },
-        session.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' },
-        { id: 'profile', icon: '👤', label: 'Profil', action: openSideMenu }
-    ].filter(Boolean);
+// ---------- Alsó menü ----------
+// Alap: Kezdőlap · Felhasználók (ha joga van) · Profil
+// Egy oldal saját füleket tehet bele (setPageTabs) → Kezdőlap · fülek · Profil
+let pageTabs = null;     // [{ id, icon, label }]
+let activeTab = null;
+let onTabSelect = null;
 
+const renderNav = () => {
+    if (!sessionRef) return;
+    const page = document.body.dataset.page;
+    const home = { id: 'home', icon: '🏠', label: 'Kezdőlap', go: 'index.html' };
+    const profile = { id: 'profile', icon: '👤', label: 'Profil', action: openSideMenu };
+    const items = pageTabs
+        ? [home, ...pageTabs.map((t) => ({ ...t, tab: true })), profile]
+        : [home, sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' }, profile].filter(Boolean);
+
+    const isActive = (i) => (i.tab ? i.id === activeTab : !pageTabs && i.id === page);
     const nav = $('#bottomNav');
     nav.innerHTML = items.map((i) =>
-        `<button data-nav="${i.id}" class="${i.id === page ? 'active' : ''}"><span class="nav-ico">${i.icon}</span>${i.label}</button>`
+        `<button data-nav="${esc(i.id)}" class="${isActive(i) ? 'active' : ''}"><span class="nav-ico">${i.icon}</span>${esc(i.label)}</button>`
     ).join('');
     nav.querySelectorAll('button').forEach((b) => {
         const item = items.find((i) => i.id === b.dataset.nav);
-        b.addEventListener('click', () => item.action ? item.action() : (location.href = item.go));
+        b.addEventListener('click', () => {
+            if (item.tab) return selectPageTab(item.id);
+            if (item.action) return item.action();
+            location.href = item.go;
+        });
     });
     nav.classList.remove('hidden');
+};
+
+export const selectPageTab = (id) => {
+    if (id !== activeTab) feedback();
+    activeTab = id;
+    $('#bottomNav')?.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.nav === id));
+    onTabSelect?.(id);
+};
+
+// tabs: [{ id, icon, label }], onSelect(id) – az első fül lesz aktív
+export const setPageTabs = (tabs, onSelect) => {
+    pageTabs = tabs;
+    onTabSelect = onSelect;
+    activeTab = tabs[0]?.id || null;
+    renderNav();
+    onSelect?.(activeTab);
+};
+
+export const renderChrome = (session) => {
+    sessionRef = session;
+    renderNav();
     requestWakeLock();
 };
 

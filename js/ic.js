@@ -13,13 +13,14 @@ import {
     writeBatch, serverTimestamp, increment
 } from './firebase.js';
 import { IC, LEGACY_IC_SOURCE } from './config.js';
-import { esc, $, feedback, toast, openSheet, closeSheet } from './ui.js';
+import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
 
 const session = await ready;
 const canManage = session.can('ic.manage');
 const canStats = session.can('ic.stats');
 
 const LIST_CACHE = 'qube_ic_list';
+const LAST_GEN = 'qube_ic_last';
 const OUTBOX = 'qube_ic_outbox';
 const MAX_ATTEMPTS = 6;
 
@@ -43,24 +44,13 @@ const load = (key, def) => { try { return JSON.parse(localStorage.getItem(key)) 
 const store = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* tele */ } };
 
 // ============================================================
-// FÜLEK
+// FÜLEK – az alsó menüben
 // ============================================================
-const tabs = $('#icTabs');
-if (canManage || canStats) {
-    tabs.classList.remove('hidden');
-    tabs.querySelector('[data-tab=list]').classList.toggle('hidden', !canManage);
-    tabs.querySelector('[data-tab=stats]').classList.toggle('hidden', !canStats);
-}
 const showTab = (name) => {
     ['gen', 'list', 'stats'].forEach((t) => $(`#tab-${t}`).classList.toggle('hidden', t !== name));
-    tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
+    window.scrollTo(0, 0);
     if (name === 'stats') loadStats();
 };
-tabs.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-tab]');
-    if (!b) return;
-    feedback(); showTab(b.dataset.tab);
-});
 
 // ============================================================
 // IC LISTA – élő + helyi cache
@@ -75,6 +65,14 @@ onSnapshot(collection(db, 'ic_numbers'), (snap) => {
     icList = sortList(snap.docs.map((d) => ({ code: d.id, area: d.data().area })));
     store(LIST_CACHE, icList);
     renderGenSelect();
+renderLastGen();
+
+// Fülek az alsó menüben (jogosultság szerint)
+setPageTabs([
+    { id: 'gen', icon: '⚡', label: 'Generálás' },
+    canManage && { id: 'list', icon: '🗂️', label: 'Lista' },
+    canStats && { id: 'stats', icon: '📊', label: 'Statisztika' }
+].filter(Boolean), showTab);
     renderList();
 }, (e) => {
     console.error(e);
@@ -96,6 +94,14 @@ $('#genAreas').addEventListener('click', (e) => {
     genArea = b.dataset.area;
     $('#genAreas').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
     renderGenSelect();
+renderLastGen();
+
+// Fülek az alsó menüben (jogosultság szerint)
+setPageTabs([
+    { id: 'gen', icon: '⚡', label: 'Generálás' },
+    canManage && { id: 'list', icon: '🗂️', label: 'Lista' },
+    canStats && { id: 'stats', icon: '📊', label: 'Statisztika' }
+].filter(Boolean), showTab);
 });
 
 function renderGenSelect() {
@@ -125,7 +131,10 @@ $('#genBtn').addEventListener('click', () => {
     const qr1 = `${clean.toLowerCase()}@${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}@${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     const qr2 = `${clean}${padded}${r10}`;
 
-    showQr(qr1, qr2, `${formatIC(clean)}${padded}${r10}`, { area: genArea, amount });
+    const last = { qr1, qr2, label2: `${formatIC(clean)}${padded}${r10}`, code: clean, area: genArea, amount, time: now.getTime() };
+    store(LAST_GEN, last);
+    renderLastGen();
+    showQr(last);
     feedback('success');
 
     enqueue({
@@ -141,13 +150,15 @@ $('#genBtn').addEventListener('click', () => {
 });
 
 // ---------- Teljes képernyős QR ----------
-const showQr = (q1, q2, label2, meta) => {
+const showQr = (g, replay = false) => {
     $('#qr1').innerHTML = ''; $('#qr2').innerHTML = '';
-    new QRCode($('#qr1'), { text: q1, width: 260, height: 260 });
-    new QRCode($('#qr2'), { text: q2, width: 260, height: 260 });
-    $('#qr1Text').textContent = q1;
-    $('#qr2Text').textContent = label2;
-    $('#qrMeta').innerHTML = `<span class="role-badge">${esc(meta.area)}</span> <b>${fmtNum(meta.amount)} db</b>`;
+    new QRCode($('#qr1'), { text: g.qr1, width: 260, height: 260 });
+    new QRCode($('#qr2'), { text: g.qr2, width: 260, height: 260 });
+    $('#qr1Text').textContent = g.qr1;
+    $('#qr2Text').textContent = g.label2;
+    const time = new Date(g.time).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+    $('#qrMeta').innerHTML = `<span class="area-badge area-${esc(g.area.toLowerCase())}">${esc(g.area)}</span> <b>${fmtNum(g.amount)} db</b>`
+        + (replay ? ` <span class="text-muted small">· újra megnyitva (${time})</span>` : '');
     $('#qrFullscreen').classList.remove('hidden');
     document.body.classList.add('qr-open');
 };
@@ -155,6 +166,34 @@ $('#qrClose').addEventListener('click', () => {
     feedback();
     $('#qrFullscreen').classList.add('hidden');
     document.body.classList.remove('qr-open');
+    // Mezők ürítése a következő generáláshoz (a terület marad)
+    $('#genSelect').value = '';
+    $('#genAmount').value = '';
+});
+
+// ---------- Utolsó generálás (ezen a telefonon) ----------
+function renderLastGen() {
+    const g = load(LAST_GEN, null);
+    const el = $('#lastGen');
+    if (!g?.qr1) return el.classList.add('hidden');
+    const d = new Date(g.time);
+    const today = dayKey(d) === dayKey(new Date());
+    const when = (today ? 'ma ' : `${MONTHS[d.getMonth()].slice(0, 3)}. ${d.getDate()}. `)
+        + d.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+    el.innerHTML = `
+        <div class="text-start">
+            <div class="text-muted tiny">Utolsó generálás · ${esc(when)}</div>
+            <div class="fw-bold mono small">${esc(formatIC(g.code))}</div>
+            <div class="small"><span class="area-badge area-${esc(g.area.toLowerCase())}">${esc(g.area)}</span> ${fmtNum(g.amount)} db</div>
+        </div>
+        <span class="last-gen-open">QR ›</span>`;
+    el.classList.remove('hidden');
+}
+$('#lastGen').addEventListener('click', () => {
+    const g = load(LAST_GEN, null);
+    if (!g?.qr1 || typeof QRCode === 'undefined') return;
+    feedback();
+    showQr(g, true);
 });
 
 // ============================================================
@@ -479,3 +518,11 @@ if (canStats) {
 }
 
 renderGenSelect();
+renderLastGen();
+
+// Fülek az alsó menüben (jogosultság szerint)
+setPageTabs([
+    { id: 'gen', icon: '⚡', label: 'Generálás' },
+    canManage && { id: 'list', icon: '🗂️', label: 'Lista' },
+    canStats && { id: 'stats', icon: '📊', label: 'Statisztika' }
+].filter(Boolean), showTab);
