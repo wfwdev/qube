@@ -1,12 +1,15 @@
 // ============================================================
 // Qube Service Worker
-// - Saját fájlok: cache-ből azonnal, háttérben frissítve
+// - Saját fájlok: egy verzió MINDIG egyben töltődik le (telepítéskor, a
+//   böngésző HTTP cache-ét megkerülve), és onnan szolgálja ki – így nem
+//   keveredhet régi és új fájl.
 // - CDN könyvtárak (verziózott URL-ek): cache először
-// - Firebase API hívásokba nem nyúl (azokat a Firestore SDK kezeli offline)
-// Új kiadásnál elég a VERSION-t emelni → megjelenik a "Frissítés" gomb.
+// - Firebase API hívásokba nem nyúl
+// Új kiadásnál a VERSION-t emelni kell → megjelenik a "Frissítés" gomb.
 // ============================================================
-const VERSION = 'qube-v2.1.1';
-const CACHE = `${VERSION}`;
+const VERSION = 'qube-v2.1.2';
+const CACHE = VERSION;
+const CDN_CACHE = 'qube-cdn-v1'; // verziózott URL-ek, kiadások között megmarad
 
 const APP_SHELL = [
     './',
@@ -22,6 +25,7 @@ const APP_SHELL = [
     './icons/apple-touch-icon.png',
     './icons/favicon-32.png',
     './js/config.js',
+    './js/firebase-config.js',
     './js/firebase.js',
     './js/ui.js',
     './js/session.js',
@@ -48,16 +52,21 @@ const CDN_HOSTS = [
 ];
 
 self.addEventListener('install', (e) => {
-    e.waitUntil(caches.open(CACHE).then(async (c) => {
-        await c.addAll(APP_SHELL);
-        await Promise.allSettled(CDN_PRECACHE.map((u) => c.add(u)));
-    }));
+    e.waitUntil((async () => {
+        const c = await caches.open(CACHE);
+        // cache: 'reload' → mindig a szerverről, nem a böngésző régi másolatából
+        await c.addAll(APP_SHELL.map((u) => new Request(u, { cache: 'reload' })));
+        const cdn = await caches.open(CDN_CACHE);
+        await Promise.allSettled(CDN_PRECACHE.map(async (u) => {
+            if (!(await cdn.match(u))) await cdn.add(u);
+        }));
+    })());
 });
 
 self.addEventListener('activate', (e) => {
     e.waitUntil(
         caches.keys()
-            .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+            .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== CDN_CACHE).map((k) => caches.delete(k))))
             .then(() => self.clients.claim())
     );
 });
@@ -66,27 +75,23 @@ self.addEventListener('message', (e) => {
     if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-// Saját fájlok: azonnal a cache-ből (gyors oldalváltás), a háttérben frissít.
-// Új kiadásnál a VERSION emelése úgyis teljesen új cache-t tölt le.
-const staleWhileRevalidate = async (e, req) => {
+// Saját fájlok: a verzió cache-éből; ha valami hiányzik, hálózatról
+const appFile = async (req) => {
     const cache = await caches.open(CACHE);
-    const hit = await cache.match(req, { ignoreSearch: req.mode === 'navigate' });
-    const update = fetch(req).then((res) => {
+    const hit = await cache.match(req, { ignoreSearch: true });
+    if (hit) return hit;
+    try {
+        const res = await fetch(req);
         if (res.ok) cache.put(req, res.clone());
         return res;
-    }).catch(() => null);
-    if (hit) {
-        e.waitUntil(update);
-        return hit;
+    } catch {
+        if (req.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
+        return Response.error();
     }
-    const res = await update;
-    if (res) return res;
-    if (req.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
-    return Response.error();
 };
 
-const cacheFirst = async (req) => {
-    const cache = await caches.open(CACHE);
+const cdnFile = async (req) => {
+    const cache = await caches.open(CDN_CACHE);
     const hit = await cache.match(req);
     if (hit) return hit;
     const res = await fetch(req);
@@ -100,9 +105,9 @@ self.addEventListener('fetch', (e) => {
     const url = new URL(req.url);
 
     if (url.origin === self.location.origin) {
-        e.respondWith(staleWhileRevalidate(e, req));
+        e.respondWith(appFile(req));
     } else if (CDN_HOSTS.includes(url.hostname)) {
-        e.respondWith(cacheFirst(req));
+        e.respondWith(cdnFile(req));
     }
     // minden más (Firestore, Auth API) → böngésző alapértelmezés
 });

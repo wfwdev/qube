@@ -14,7 +14,8 @@ style.css           Közös stílus (Bootstrap 5.3 CSS-re épül)
 sw.js               Service Worker (offline, frissítés jelzés)
 manifest.json       PWA leíró
 firestore.rules     Firestore biztonsági szabályok
-js/config.js        App név, Firebase config, jogosultságok, szerepkörök, modulok
+js/config.js        App név, jogosultságok, szerepkörök, modulok
+js/firebase-config.js  Firebase kapcsolat adatai (a frissítések nem írják felül)
 js/firebase.js      Firebase inicializálás (Auth + Firestore offline cache-sel)
 js/session.js       Névtelen belépés, regisztráció, szerepkör, oldalvédelem
 js/ui.js            Navbar, alsó menü, profil panel, toast, visszajelzések
@@ -58,7 +59,7 @@ Az `admin` szerepkör mindig mindent elér.
 3. **Authentication → Settings → Authorized domains** → add hozzá: `<github-felhasználó>.github.io`.
 4. **Firestore Database** → Create database (régió: `europe-west3` vagy `eur3`), production módban.
 5. **Firestore → Rules** → másold be a `firestore.rules` tartalmát → Publish.
-6. Projektbeállítások → Saját alkalmazások → **Web app** hozzáadása → a config objektumot másold a `js/config.js` → `FIREBASE_CONFIG`-ba.
+6. Projektbeállítások → Saját alkalmazások → **Web app** hozzáadása → a config objektumot másold a `js/firebase-config.js`-be.
 
 ### 2. GitHub Pages
 1. Töltsd fel a repót.
@@ -72,8 +73,11 @@ Az `admin` szerepkör mindig mindent elér.
 
 ## Frissítés kiadása
 
-Az `sw.js`-ben emeld a `VERSION`-t (és a `js/config.js`-ben az `APP.version`-t). A telefonokon a fejlécben megjelenik a **Frissítés** gomb.
-Új fájl esetén vedd fel az `sw.js` `APP_SHELL` listájába is, hogy offline is elérhető legyen.
+1. Az `sw.js`-ben emeld a `VERSION`-t (és a `js/config.js`-ben az `APP.version`-t) – **enélkül a telefonok nem kapják meg a változást**.
+2. Az összes módosított fájlt **egyetlen feltöltésben** tedd fel (GitHub → Add file → Upload files → mind egyszerre), hogy ne kerüljön félkész állapot a telefonokra.
+3. A telefonokon a fejlécben megjelenik a **Frissítés** gomb.
+
+Új fájl esetén vedd fel az `sw.js` `APP_SHELL` listájába is. Ha egy telefon beragad a „Betöltés…” képernyőn, 12 mp után megjelenik a **Gyorsítótár törlése** gomb.
 
 ---
 **Fejlesztette:** Kovács Gábor
