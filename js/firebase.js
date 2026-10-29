@@ -8,7 +8,7 @@ import {
 import {
     initializeFirestore, memoryLocalCache,
     collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc,
-    onSnapshot, query, where, orderBy, limit, writeBatch, serverTimestamp, Timestamp
+    onSnapshot, query, where, orderBy, limit, writeBatch, serverTimestamp, Timestamp, increment
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { FIREBASE_CONFIG } from './config.js';
 
@@ -26,5 +26,5 @@ export const db = initializeFirestore(app, {
 export {
     signInAnonymously, onAuthStateChanged,
     collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc,
-    onSnapshot, query, where, orderBy, limit, writeBatch, serverTimestamp, Timestamp
+    onSnapshot, query, where, orderBy, limit, writeBatch, serverTimestamp, Timestamp, increment
 };
