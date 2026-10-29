@@ -1,0 +1,113 @@
+rules_version = '2';
+
+// ============================================================
+// Qube – Firestore biztonsági szabályok
+// Firebase konzol → Firestore Database → Rules: ide másold be, majd Publish.
+//
+// Elvek:
+// - Mindenki névtelen Firebase azonosítóval ér el (Anonymous Auth).
+// - A jogosultság a users/{uid}.role mezőből és a roles/{role}.permissions
+//   listából jön. Az 'admin' szerepkör mindig mindent elér.
+// - Új felhasználó csak 'operator'-ként jöhet létre, a szerepkörét
+//   maga nem írhatja át.
+// - Minden, ami itt nincs kifejezetten engedélyezve, tiltott.
+// ============================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Segédfüggvények ----------
+    function signedIn() { return request.auth != null; }
+    function userPath(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function rolePath(role) { return /databases/$(database)/documents/roles/$(role); }
+    function me() { return get(userPath(request.auth.uid)).data; }
+
+    function active() {
+      return signedIn()
+        && exists(userPath(request.auth.uid))
+        && me().status == 'active';
+    }
+    function isAdmin() { return active() && me().role == 'admin'; }
+    function can(perm) {
+      return active()
+        && (me().role == 'admin' || perm in get(rolePath(me().role)).data.permissions);
+    }
+
+    function validName(n) { return n is string && n.size() >= 3 && n.size() <= 60; }
+    // Ugyanaz a minta, mint a js/config.js EMP_ID_PATTERN-je!
+    function validEmpId(e) { return e is string && e.matches('^[0-9]{3,10}$'); }
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // ---------- Felhasználók ----------
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || can('users.view'));
+
+      // Regisztráció: csak saját magát, operátorként.
+      // 'active' csak akkor lehet, ha ugyanabban a batch-ben a törzsszámot is lefoglalta.
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'empId', 'role', 'status', 'createdAt', 'lastActive'])
+        && validName(request.resource.data.name)
+        && validEmpId(request.resource.data.empId)
+        && request.resource.data.role == 'operator'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastActive == request.time
+        && (
+          request.resource.data.status == 'conflict'
+          || (request.resource.data.status == 'active'
+              && getAfter(/databases/$(database)/documents/empIds/$(request.resource.data.empId)).data.uid == uid)
+        );
+
+      allow update: if
+        // 1) Saját magának: csak név és "utoljára aktív"
+        (signedIn() && request.auth.uid == uid
+          && changed().hasOnly(['name', 'lastActive'])
+          && validName(request.resource.data.name)
+          && (!('lastActive' in changed()) || request.resource.data.lastActive == request.time))
+        // 2) Admin: bármit
+        || isAdmin()
+        // 3) Vezető (users.manage): nem-admin fiók szerepköre és aktív/letiltott állapota
+        || (can('users.manage')
+          && request.auth.uid != uid
+          && resource.data.role != 'admin'
+          && request.resource.data.role != 'admin'
+          && resource.data.status in ['active', 'disabled']
+          && request.resource.data.status in ['active', 'disabled']
+          && changed().hasOnly(['role', 'status'])
+          && exists(rolePath(request.resource.data.role)));
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Törzsszám foglalás (egyediség) ----------
+    match /empIds/{empId} {
+      allow get: if signedIn();
+
+      // Regisztrációkor: a saját, éppen létrejövő aktív profiljához
+      allow create: if signedIn() && validEmpId(empId)
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        && getAfter(userPath(request.auth.uid)).data.empId == empId
+        && getAfter(userPath(request.auth.uid)).data.status == 'active';
+
+      // Összekapcsolás, javítás, törlés: admin
+      allow create, update, delete: if isAdmin() && validEmpId(empId);
+    }
+
+    // ---------- Szerepkörök ----------
+    match /roles/{roleId} {
+      allow read: if signedIn();
+      allow delete: if isAdmin() && roleId != 'admin' && roleId != 'operator';
+      allow create, update: if isAdmin()
+        && roleId.matches('^[a-z][a-z0-9_]{1,29}$')
+        && request.resource.data.keys().hasOnly(['label', 'rank', 'permissions'])
+        && request.resource.data.label is string
+        && request.resource.data.rank is int
+        && request.resource.data.permissions is list;
+    }
+
+    // ---------- Modulok (következő lépésekben) ----------
+    // match /ic_numbers/{id} {
+    //   allow read: if can('ic.use');
+    //   allow write: if can('ic.manage');
+    // }
+  }
+}

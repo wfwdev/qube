@@ -1,0 +1,261 @@
+/* ==========================================================================
+   QUBE – stílusok
+   ========================================================================== */
+
+/* ---------- 1. Változók, sötét mód ---------- */
+:root {
+    --bg: #f8fafc;
+    --sur: #ffffff;
+    --sur2: #f1f5f9;
+    --bord: #e2e8f0;
+    --tx: #0f172a;
+    --tx2: #64748b;
+    --accent: #9d29b2;
+    --orange: #ff5f00;
+    --brand-grad: linear-gradient(135deg, #ff5f00, #9d29b2);
+    --nav-h: 64px;
+    --bottom-h: 72px;
+}
+body.dark-mode {
+    --bg: #121212;
+    --sur: #1e1e1e;
+    --sur2: #2a2a2a;
+    --bord: #3a3a3a;
+    --tx: #f5f5f5;
+    --tx2: #a0a0a0;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--tx);
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color .3s, color .3s;
+}
+.app-main {
+    padding-top: calc(var(--nav-h) + env(safe-area-inset-top) + 20px);
+    padding-bottom: calc(var(--bottom-h) + env(safe-area-inset-bottom) + 20px);
+}
+.tiny { font-size: .72rem; }
+.hidden { display: none !important; }
+
+/* Bootstrap sötét mód felülírások */
+body.dark-mode .text-muted { color: var(--tx2) !important; }
+body.dark-mode h4, body.dark-mode h5, body.dark-mode h6 { color: var(--tx); }
+
+/* ---------- 2. Navigáció ---------- */
+.app-navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1050;
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: calc(var(--nav-h) + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 12px 0;
+    background: var(--brand-grad);
+    border-radius: 0 0 16px 16px;
+}
+.navbar-title { font-weight: 700; font-size: 1.3rem; color: #fff; letter-spacing: .3px; }
+.nav-btn {
+    width: 40px; height: 40px; border: 0; border-radius: 50%;
+    background: rgba(255, 255, 255, .2); color: #fff; font-size: 1.15rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.nav-btn:active { background: rgba(255, 255, 255, .35); }
+.update-btn {
+    border: 0; border-radius: 20px; padding: 6px 12px;
+    font-size: .75rem; font-weight: 700; background: #ffc107; color: #000;
+    animation: pulseUpdate 2s infinite;
+}
+@keyframes pulseUpdate {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 193, 7, .7); }
+    70%  { box-shadow: 0 0 0 8px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; height: calc(var(--bottom-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--sur); border-top: 1px solid var(--bord);
+}
+.bottom-nav button {
+    flex: 1; border: 0; background: 0; font-size: .7rem; font-weight: 700; color: var(--tx2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.bottom-nav button.active { color: var(--orange); }
+.nav-ico { font-size: 1.35rem; margin-bottom: 3px; filter: grayscale(1); opacity: .6; }
+.bottom-nav button.active .nav-ico { filter: none; opacity: 1; }
+
+/* ---------- 3. Teljes képernyős állapotok ---------- */
+.app-screen {
+    position: fixed; inset: 0; z-index: 1040;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: calc(var(--nav-h) + env(safe-area-inset-top) + 16px) 16px 24px;
+    overflow-y: auto;
+}
+body.screen-open .bottom-nav, body.screen-open .app-main { display: none; }
+.screen-card {
+    width: 100%; max-width: 420px;
+    background: var(--sur); border: 1px solid var(--bord); border-radius: 20px; padding: 28px 22px;
+}
+.screen-icon { font-size: 2.4rem; margin-bottom: 10px; }
+.boot-loader { text-align: center; }
+.spinner {
+    width: 38px; height: 38px; margin: 0 auto;
+    border: 4px solid var(--bord); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- 4. Kártyák, űrlapok, gombok ---------- */
+.minimal-card {
+    background: var(--sur); border: 1px solid var(--bord);
+    border-radius: 16px; padding: 22px; margin-bottom: 18px;
+}
+.form-label {
+    font-size: .75rem; font-weight: 700; color: var(--tx2);
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.form-control, .form-select {
+    background-color: var(--sur2); border: 1px solid var(--bord);
+    color: var(--tx); border-radius: 12px; padding: 12px 16px; font-size: 16px; /* 16px: iOS ne zoomoljon */
+}
+.form-control:focus, .form-select:focus {
+    background-color: var(--sur); border-color: var(--accent); box-shadow: none; color: var(--tx);
+}
+.form-control::placeholder { color: var(--tx2); opacity: .7; }
+.form-check-input { background-color: var(--sur2); border-color: var(--bord); }
+.form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
+.form-switch .form-check-input { width: 2.5em; height: 1.3em; cursor: pointer; }
+
+.btn-primary { background: var(--brand-grad); border: 0; border-radius: 12px; padding: 13px; font-weight: 700; color: #fff; }
+.btn-primary:active, .btn-primary:focus { background: var(--brand-grad); filter: brightness(.92); color: #fff; }
+.btn-light { background: var(--sur2); border: 1px solid var(--bord); color: var(--tx); border-radius: 12px; font-weight: 600; padding: 12px; }
+.btn-light:active { background: var(--bord); color: var(--tx); }
+.btn-outline-danger { border-radius: 12px; padding: 12px; font-weight: 600; }
+.btn.dashed { border-style: dashed; }
+
+.pill-nav { display: flex; background: var(--sur2); border: 1px solid var(--bord); border-radius: 12px; padding: 5px; margin-bottom: 18px; }
+.pill-nav button { flex: 1; border: 0; background: 0; padding: 10px; border-radius: 8px; font-weight: 600; color: var(--tx2); }
+.pill-nav button.active { background: var(--sur); color: var(--tx); box-shadow: 0 2px 4px rgba(0, 0, 0, .06); }
+
+.notice {
+    display: block; padding: 12px 14px; margin-bottom: 16px; border-radius: 12px;
+    background: rgba(255, 193, 7, .14); border: 1px solid rgba(255, 193, 7, .45);
+    color: var(--tx); font-size: .85rem; text-decoration: none;
+}
+.section-title { font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+
+/* ---------- 5. Kezdőlap csempék ---------- */
+.dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.dashboard-tile {
+    background: var(--sur); border: 1px solid var(--bord); border-radius: 16px; padding: 18px 12px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    color: var(--tx); box-shadow: 0 4px 15px rgba(0, 0, 0, .03);
+    transition: transform .15s;
+}
+.dashboard-tile:active { transform: scale(.96); }
+.tile-icon {
+    width: 50px; height: 50px; margin-bottom: 10px; border-radius: 14px; font-size: 1.7rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.tile-title { font-size: 1rem; font-weight: 700; line-height: 1.2; margin-bottom: 3px; }
+.tile-desc { font-size: .74rem; color: var(--tx2); line-height: 1.3; }
+.tile-orange .tile-icon { background: rgba(255, 95, 0, .15); }
+.tile-blue   .tile-icon { background: rgba(0, 122, 255, .15); }
+.tile-green  .tile-icon { background: rgba(52, 199, 89, .15); }
+.tile-purple .tile-icon { background: rgba(157, 41, 178, .15); }
+.tile-soon { opacity: .5; }
+.tile-soon .tile-desc { font-weight: 700; }
+
+/* ---------- 6. Listák (felhasználók, szerepkörök) ---------- */
+.user-row {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 12px; border: 0; background: transparent; color: var(--tx);
+    border-radius: 12px;
+}
+.user-row + .user-row { border-top: 1px solid var(--bord); border-radius: 0; }
+.user-row:active { background: var(--sur2); }
+.avatar {
+    flex: none; width: 48px; height: 48px; border-radius: 50%;
+    background: var(--brand-grad); color: #fff; font-weight: 700; font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.avatar.sm { width: 38px; height: 38px; font-size: 1rem; }
+.me-badge { font-size: .65rem; background: var(--accent); color: #fff; border-radius: 6px; padding: 2px 6px; vertical-align: middle; }
+.role-badge {
+    display: inline-block; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+    background: rgba(157, 41, 178, .12); color: var(--accent);
+}
+.status { display: inline-block; font-size: .68rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.st-active   { background: rgba(52, 199, 89, .15); color: #1f9d47; }
+.st-conflict { background: rgba(255, 193, 7, .2); color: #a07400; }
+.st-disabled { background: rgba(220, 53, 69, .15); color: #dc3545; }
+.st-merged   { background: var(--sur2); color: var(--tx2); }
+
+.chip-row { display: flex; gap: 8px; overflow-x: auto; }
+.chip {
+    flex: none; border: 1px solid var(--bord); background: var(--sur); color: var(--tx2);
+    border-radius: 20px; padding: 6px 12px; font-size: .8rem; font-weight: 600;
+}
+.chip span { opacity: .7; margin-left: 2px; }
+.chip.active { background: var(--tx); color: var(--bg); border-color: var(--tx); }
+.chip.chip-alert:not(.active) { border-color: #ffc107; color: #a07400; }
+
+.perm-list { border: 1px solid var(--bord); border-radius: 12px; overflow: hidden; }
+.perm-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; font-size: .9rem; }
+.perm-row + .perm-row { border-top: 1px solid var(--bord); }
+.perm-row .form-check-input { flex: none; width: 1.3em; height: 1.3em; margin-top: 2px; }
+
+/* ---------- 7. Profil panel ---------- */
+.side-overlay {
+    position: fixed; inset: 0; z-index: 2040; background: rgba(0, 0, 0, .55);
+    opacity: 0; visibility: hidden; transition: all .3s;
+}
+.side-overlay.open { opacity: 1; visibility: visible; }
+.side-menu {
+    position: fixed; top: 0; bottom: 0; left: -310px; z-index: 2050;
+    width: 290px; padding: calc(24px + env(safe-area-inset-top)) 20px 20px;
+    background: var(--sur); box-shadow: 2px 0 15px rgba(0, 0, 0, .15);
+    overflow-y: auto; -webkit-overflow-scrolling: touch; transition: left .3s;
+}
+.side-menu.open { left: 0; }
+.profile-head { display: flex; gap: 14px; align-items: center; }
+.setting-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 10px 12px; margin-bottom: 8px; border-radius: 12px;
+    background: var(--sur2); border: 1px solid var(--bord);
+}
+
+/* ---------- 8. Alsó lap (modál), toast ---------- */
+.overlay {
+    display: none; position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0, 0, 0, .55); align-items: flex-end;
+}
+.overlay.open { display: flex; }
+.modal-custom {
+    width: 100%; max-height: 90vh; overflow-y: auto;
+    background: var(--sur); color: var(--tx); border-radius: 24px 24px 0 0;
+    padding: 26px 20px calc(26px + env(safe-area-inset-bottom));
+    animation: slideUp .25s;
+}
+@keyframes slideUp { from { transform: translateY(100%); } }
+
+.app-toast {
+    position: fixed; left: 50%; top: calc(var(--nav-h) + env(safe-area-inset-top) + 10px);
+    z-index: 3000; transform: translate(-50%, -20px); opacity: 0; pointer-events: none;
+    max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 12px;
+    background: #222; color: #fff; font-size: .88rem; font-weight: 600;
+    transition: opacity .2s, transform .2s;
+}
+.app-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.app-toast.success { background: #1f9d47; }
+.app-toast.error { background: #dc3545; }
+
+/* ---------- 9. Villanás visszajelzés ---------- */
+#flashOverlay { position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity .4s ease-out; }
+#flashOverlay.flash-success { opacity: 1; transition: none; box-shadow: inset 0 0 40px 15px rgba(40, 167, 69, .7); }
+#flashOverlay.flash-error   { opacity: 1; transition: none; box-shadow: inset 0 0 40px 15px rgba(220, 53, 69, .7); }
+#flashOverlay.flash-light   { opacity: 1; transition: none; box-shadow: inset 0 0 20px 5px rgba(157, 41, 178, .4); }

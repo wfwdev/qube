@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Felhasználók · Qube</title>
+    <meta name="theme-color" content="#ff5f00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="admin" data-title="Felhasználók" data-perm="users.view">
+    <script>if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-mode');</script>
+
+    <main class="container app-main">
+        <div class="pill-nav" id="tabs">
+            <button data-tab="users" class="active">👥 Felhasználók</button>
+            <button data-tab="roles">🛡️ Szerepkörök</button>
+        </div>
+
+        <!-- FELHASZNÁLÓK -->
+        <section id="tab-users">
+            <input type="search" id="userSearch" class="form-control mb-3" placeholder="Keresés névre vagy törzsszámra…">
+            <div class="chip-row mb-3" id="filters"></div>
+            <div class="minimal-card p-2" id="userList">
+                <div class="text-center text-muted small py-4">Betöltés…</div>
+            </div>
+        </section>
+
+        <!-- SZEREPKÖRÖK (admin) -->
+        <section id="tab-roles" class="hidden">
+            <div class="minimal-card hidden" id="seedBox">
+                <h6 class="fw-bold">Még nincsenek szerepkörök</h6>
+                <p class="text-muted small">Töltsd fel az alapértelmezetteket (Operátor, Műszakvezető, Csoportvezető, Admin), utána szabadon szerkesztheted és bővítheted őket.</p>
+                <button class="btn btn-primary w-100" id="seedBtn">Alapértelmezett szerepkörök feltöltése</button>
+            </div>
+            <div class="minimal-card p-2" id="roleList"></div>
+            <button class="btn btn-light w-100 dashed" id="newRoleBtn">+ Új szerepkör</button>
+        </section>
+    </main>
+
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>
