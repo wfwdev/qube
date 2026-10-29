@@ -5,7 +5,7 @@
 // - Firebase API hívásokba nem nyúl (azokat a Firestore SDK kezeli offline)
 // Új kiadásnál elég a VERSION-t emelni → megjelenik a "Frissítés" gomb.
 // ============================================================
-const VERSION = 'qube-v2.1.0';
+const VERSION = 'qube-v2.1.1';
 const CACHE = `${VERSION}`;
 
 const APP_SHELL = [

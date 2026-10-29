@@ -25,12 +25,6 @@
     <script>if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-mode');</script>
 
     <main class="container app-main">
-        <div class="pill-nav hidden" id="icTabs">
-            <button data-tab="gen" class="active">Generálás</button>
-            <button data-tab="list" class="hidden">Lista</button>
-            <button data-tab="stats" class="hidden">Statisztika</button>
-        </div>
-
         <!-- GENERÁLÁS -->
         <section id="tab-gen">
             <div class="minimal-card">
@@ -42,6 +36,7 @@
                 <button class="btn btn-primary btn-lg w-100" id="genBtn">Generálás</button>
             </div>
             <div class="sync-line hidden" id="syncLine"></div>
+            <button class="last-gen hidden" id="lastGen"></button>
         </section>
 
         <!-- IC LISTA (ic.manage) -->

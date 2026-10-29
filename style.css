@@ -297,3 +297,10 @@ body.qr-open { overflow: hidden; }
 .qr-large-box canvas, .qr-large-box img { width: 100% !important; height: auto !important; margin: 0 auto; }
 .qr-label { margin-top: 14px; font-family: ui-monospace, Menlo, monospace; font-size: .85rem; color: #000; word-break: break-all; }
 .qr-footer { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); background: var(--sur); border-top: 1px solid var(--bord); }
+.last-gen {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-top: 12px; padding: 14px 16px; border-radius: 16px; color: var(--tx);
+    background: var(--sur); border: 1px dashed var(--bord);
+}
+.last-gen:active { background: var(--sur2); }
+.last-gen-open { flex: none; font-weight: 700; color: var(--accent); }
