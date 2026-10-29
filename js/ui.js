@@ -268,7 +268,7 @@ const registerSW = () => {
         refreshing = true;
         location.reload();
     });
-    navigator.serviceWorker.register('sw.js').then((reg) => {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
         const showUpdate = (worker) => {
             const btn = $('#updateBtn');
             btn.classList.remove('hidden');
@@ -288,5 +288,39 @@ const registerSW = () => {
     }).catch((e) => console.warn('SW regisztráció sikertelen', e));
 };
 
+// ---------- Betöltés-figyelő ----------
+// Ha az oldal 12 mp után is a "Betöltés…" állapotban áll, kiírja a hibát,
+// és lehetőséget ad a gyorsítótár törlésére.
+let lastError = '';
+window.addEventListener('error', (e) => { lastError = e.message || String(e.error || ''); });
+window.addEventListener('unhandledrejection', (e) => { lastError = String(e.reason?.code || e.reason?.message || e.reason || ''); });
+
+const resetApp = async () => {
+    try {
+        const regs = await navigator.serviceWorker?.getRegistrations?.() || [];
+        await Promise.all(regs.map((r) => r.unregister()));
+        const keys = await caches?.keys?.() || [];
+        await Promise.all(keys.map((k) => caches.delete(k)));
+        localStorage.removeItem('qube_session');
+    } catch { /* amit lehetett, töröltünk */ }
+    location.reload();
+};
+
+const startWatchdog = () => setTimeout(() => {
+    if (!$('#appScreen .boot-loader')) return; // betöltött, vagy már üzenetet mutat
+    showScreen(`
+        <div class="screen-card text-center">
+            <div class="screen-icon">🐢</div>
+            <h4 class="fw-bold mb-2">Nem sikerült betölteni</h4>
+            <p class="text-muted small mb-0">Lassú vagy megszakadt a kapcsolat, esetleg egy régi verzió ragadt a telefonon.</p>
+            <button class="btn btn-primary w-100 mt-4" id="wdReload">Újrapróbálás</button>
+            <button class="btn btn-light w-100 mt-2" id="wdReset">Gyorsítótár törlése és újratöltés</button>
+            <div class="text-muted tiny mt-3">${esc(APP.name)} v${esc(APP.version)}${lastError ? ` · ${esc(lastError).slice(0, 160)}` : ''}</div>
+        </div>`);
+    $('#wdReload').addEventListener('click', () => location.reload());
+    $('#wdReset').addEventListener('click', resetApp);
+}, 12000);
+
 injectShell();
 registerSW();
+startWatchdog();

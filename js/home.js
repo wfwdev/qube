@@ -14,12 +14,19 @@ $('#roleLine').textContent = session.roleLabel;
 if (session.roleMissing) {
     $('#notice').innerHTML = `<div class="notice">A(z) „${esc(session.role)}” szerepkör még nincs beállítva. Szólj az adminnak.</div>`;
 } else if (session.isAdmin) {
-    // Admin figyelmeztetés, ha a szerepkörök még nincsenek feltöltve
-    const { db, collection, getDocs, limit, query } = await import('./firebase.js');
-    const snap = await getDocs(query(collection(db, 'roles'), limit(1))).catch(() => null);
-    if (snap && snap.empty) {
-        $('#notice').innerHTML = `<a class="notice" href="admin.html#roles">⚠️ A szerepkörök még nincsenek feltöltve. Koppints ide a beállításhoz.</a>`;
-    }
+    // Admin figyelmeztetés, ha a szerepkörök még nincsenek feltöltve.
+    // Nem várunk rá: a csempék azonnal megjelennek, ez a háttérben fut.
+    checkRolesSeeded();
+}
+
+async function checkRolesSeeded() {
+    try {
+        const { db, collection, getDocs, limit, query } = await import('./firebase.js');
+        const snap = await getDocs(query(collection(db, 'roles'), limit(1)));
+        if (snap.empty) {
+            $('#notice').innerHTML = `<a class="notice" href="admin.html#roles">⚠️ A szerepkörök még nincsenek feltöltve. Koppints ide a beállításhoz.</a>`;
+        }
+    } catch { /* nem kritikus */ }
 }
 
 const visible = MODULES.filter((m) => session.can(m.perm));

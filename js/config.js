@@ -6,19 +6,7 @@
 export const APP = {
     name: 'Qube',
     tagline: 'Gyári kódok, egy helyen',
-    version: '2.1.1'
-};
-
-// ⚠️ Ide az ÚJ Firebase projekt webes konfigurációja kerül
-// (Firebase konzol → Projektbeállítások → Saját alkalmazások → SDK config)
-export const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAtXpjiTnSkzH6A40DPJxx3SEffT2kmFZw",
-  authDomain: "qube-a6e09.firebaseapp.com",
-  projectId: "qube-a6e09",
-  storageBucket: "qube-a6e09.firebasestorage.app",
-  messagingSenderId: "417361318447",
-  appId: "1:417361318447:web:95d257e2e121ffb5d0acda",
-  measurementId: "G-4GZGH3EYH0"
+    version: '2.1.2'
 };
 
 // ------------------------------------------------------------
