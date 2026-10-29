@@ -1,11 +1,11 @@
 // ============================================================
 // Qube Service Worker
-// - Saját fájlok: hálózat először (mindig a friss kód), offline → cache
+// - Saját fájlok: cache-ből azonnal, háttérben frissítve
 // - CDN könyvtárak (verziózott URL-ek): cache először
 // - Firebase API hívásokba nem nyúl (azokat a Firestore SDK kezeli offline)
 // Új kiadásnál elég a VERSION-t emelni → megjelenik a "Frissítés" gomb.
 // ============================================================
-const VERSION = 'qube-v2.0.0';
+const VERSION = 'qube-v2.0.2';
 const CACHE = `${VERSION}`;
 
 const APP_SHELL = [
@@ -52,26 +52,23 @@ self.addEventListener('message', (e) => {
     if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-// Gyenge gyári WiFi esetén ennyi várakozás után a cache-ből szolgál ki
-const NETWORK_TIMEOUT = 4000;
-
-const networkFirst = async (req) => {
+// Saját fájlok: azonnal a cache-ből (gyors oldalváltás), a háttérben frissít.
+// Új kiadásnál a VERSION emelése úgyis teljesen új cache-t tölt le.
+const staleWhileRevalidate = async (e, req) => {
     const cache = await caches.open(CACHE);
-    const fromNetwork = fetch(req).then((res) => {
+    const hit = await cache.match(req, { ignoreSearch: req.mode === 'navigate' });
+    const update = fetch(req).then((res) => {
         if (res.ok) cache.put(req, res.clone());
         return res;
-    });
-    try {
-        const timeout = new Promise((resolve) => setTimeout(async () => {
-            resolve(await cache.match(req, { ignoreSearch: true }) || fromNetwork);
-        }, NETWORK_TIMEOUT));
-        return await Promise.race([fromNetwork, timeout]);
-    } catch {
-        const hit = await cache.match(req, { ignoreSearch: true });
-        if (hit) return hit;
-        if (req.mode === 'navigate') return cache.match('./index.html');
-        throw new Error('offline');
+    }).catch(() => null);
+    if (hit) {
+        e.waitUntil(update);
+        return hit;
     }
+    const res = await update;
+    if (res) return res;
+    if (req.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
+    return Response.error();
 };
 
 const cacheFirst = async (req) => {
@@ -89,7 +86,7 @@ self.addEventListener('fetch', (e) => {
     const url = new URL(req.url);
 
     if (url.origin === self.location.origin) {
-        e.respondWith(networkFirst(req));
+        e.respondWith(staleWhileRevalidate(e, req));
     } else if (CDN_HOSTS.includes(url.hostname)) {
         e.respondWith(cacheFirst(req));
     }
