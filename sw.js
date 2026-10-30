@@ -18,6 +18,7 @@ const APP_SHELL = [
     './admin.html',
     './ic.html',
     './mes.html',
+    './olvaso-teszt.html',
     './style.css',
     './manifest.json',
     './icons/icon.svg',

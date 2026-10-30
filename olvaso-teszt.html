@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olvasó teszt · Qube</title>
+    <meta name="theme-color" content="#ff5f00">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+    <style>
+        :root { --bg: #f8fafc; --sur: #fff; --bord: #e2e8f0; --tx: #0f172a; --tx2: #64748b; --acc: #9d29b2; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; background: var(--bg); color: var(--tx); }
+        header { padding: 16px 20px; background: linear-gradient(135deg, #ff5f00, #9d29b2); color: #fff; }
+        header h1 { margin: 0; font-size: 1.3rem; }
+        main { max-width: 900px; margin: 0 auto; padding: 16px; }
+        .card { background: var(--sur); border: 1px solid var(--bord); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+        ol { margin: 0; padding-left: 20px; line-height: 1.6; color: var(--tx2); }
+        #catch { width: 100%; font-size: 1.1rem; padding: 14px; border: 2px dashed var(--acc); border-radius: 12px; }
+        #catch:focus { outline: none; background: #faf5fb; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+        button { border: 1px solid var(--bord); background: var(--sur); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+        .verdict { font-size: 1.05rem; font-weight: 700; padding: 12px 14px; border-radius: 12px; margin-top: 10px; }
+        .ok { background: #e7f6ec; color: #1f7a3f; }
+        .bad { background: #fdecee; color: #b42335; }
+        .warn { background: #fff6dc; color: #8a6400; }
+        .seq { font-family: ui-monospace, Consolas, monospace; font-size: 1rem; word-break: break-all; }
+        .seq b { background: #9d29b2; color: #fff; padding: 1px 6px; border-radius: 5px; margin: 0 1px; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+        th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bord); }
+        th { color: var(--tx2); font-weight: 600; }
+        tr.hl td { background: #fff6dc; }
+    </style>
+</head>
+<body>
+    <header><h1>🔍 Olvasó teszt</h1></header>
+    <main>
+        <div class="card">
+            <ol>
+                <li>Csatlakoztasd az olvasót egy számítógéphez, és ott nyisd meg ezt az oldalt.</li>
+                <li>A telefonon a Qube MES oldalán jeleníts meg egy QR-t (lehet teszt felhasználónévvel és jelszóval is).</li>
+                <li>Kattints az alábbi mezőbe, és olvasd be a QR-t.</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <input id="catch" autocomplete="off" placeholder="Kattints ide, majd olvasd be a QR-t…">
+            <div class="row">
+                <button id="clear">Törlés</button>
+                <span style="color:var(--tx2);font-size:.85rem">A beolvasott jelszó csak ezen az oldalon látszik, sehova nem kerül.</span>
+            </div>
+            <div id="verdict"></div>
+        </div>
+
+        <div class="card">
+            <div style="color:var(--tx2);font-size:.85rem;margin-bottom:6px">Amit az olvasó küldött:</div>
+            <div class="seq" id="seq">–</div>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th>#</th><th>+ms</th><th>key</th><th>code</th><th>módosító</th></tr></thead>
+                <tbody id="log"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+    // Önálló oldal: semmit nem tölt be az appból, nem igényel bejelentkezést.
+    const input = document.getElementById('catch');
+    const log = document.getElementById('log');
+    const seqEl = document.getElementById('seq');
+    const verdict = document.getElementById('verdict');
+    let events = [];
+    let last = 0;
+    let idle = null;
+
+    const label = (e) => {
+        const mods = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && e.key.length > 1 && 'Shift', e.metaKey && 'Win'].filter(Boolean);
+        const k = e.key === ' ' ? 'SZÓKÖZ' : e.key === 'Tab' ? 'TAB' : e.key === 'Enter' ? 'ENTER' : e.key;
+        return mods.length ? `${mods.join('+')}+${k.length === 1 ? k.toUpperCase() : k}` : k;
+    };
+    const isSpecial = (e) => e.key.length > 1 || e.ctrlKey || e.altKey || e.metaKey;
+    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+    const render = () => {
+        seqEl.innerHTML = events.length
+            ? events.filter((e) => !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key))
+                .map((e) => isSpecial(e) ? `<b>${esc(label(e))}</b>` : esc(e.key)).join('')
+            : '–';
+    };
+
+    const judge = () => {
+        const keys = events.filter((e) => !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key));
+        if (!keys.length) return;
+        const lastKey = keys[keys.length - 1];
+        const hasF4 = keys.some((e) => e.key === 'F4' && !e.ctrlKey && !e.altKey);
+        const ctrlY = keys.some((e) => e.ctrlKey && (e.key === 'y' || e.key === 'Y' || e.code === 'KeyY'));
+        let cls = 'warn', txt;
+        if (hasF4 && lastKey.key === 'F4') { cls = 'ok'; txt = '✓ Az olvasó F4-et küld a végén. Ha a terminál mégsem lép be, valószínűleg túl gyorsan érkezik – ezt az olvasón késleltetéssel lehet megoldani.'; }
+        else if (hasF4) txt = 'F4 érkezett, de nem a végén – szólj, megnézzük.';
+        else if (ctrlY) { cls = 'bad'; txt = '✗ F4 helyett Ctrl+Y érkezett → az olvasón a „Control + X (Control + ASCII) Mode” be van kapcsolva. Kapcsold KI.'; }
+        else if (lastKey.key === 'Tab' || /^[\x20-\x7e]$/.test(lastKey.key)) { cls = 'bad'; txt = '✗ A végén nem érkezett semmilyen funkcióbillentyű → az olvasón a „Function Code Transmit” valószínűleg ki van kapcsolva. Kapcsold BE.'; }
+        else txt = `A végén ez érkezett: ${label(lastKey)} – küldj róla képet.`;
+        verdict.className = `verdict ${cls}`;
+        verdict.textContent = txt;
+    };
+
+    input.addEventListener('keydown', (e) => {
+        // A böngésző ne reagáljon a funkcióbillentyűkre (F5 frissítés, F11 teljes képernyő, Tab ugrás…)
+        if (/^F\d+$/.test(e.key) || e.key === 'Tab' || e.ctrlKey || e.altKey) e.preventDefault();
+        const now = performance.now();
+        const dt = last ? Math.round(now - last) : 0;
+        last = now;
+        events.push(e);
+        const tr = document.createElement('tr');
+        if (isSpecial(e)) tr.className = 'hl';
+        tr.innerHTML = `<td>${events.length}</td><td>${dt}</td><td>${esc(e.key === ' ' ? '␣' : e.key)}</td><td>${esc(e.code)}</td><td>${esc([e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift', e.metaKey && 'Win'].filter(Boolean).join('+'))}</td>`;
+        log.appendChild(tr);
+        render();
+        clearTimeout(idle);
+        idle = setTimeout(judge, 400);
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+        events = []; last = 0; log.innerHTML = ''; input.value = ''; verdict.className = ''; verdict.textContent = '';
+        render(); input.focus();
+    });
+    input.focus();
+    </script>
+</body>
+</html>
