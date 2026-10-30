@@ -60,14 +60,15 @@
         <div class="minimal-card">
             <label class="form-label" for="qrSuffix">Jelszó után a QR ezt „nyomja meg”</label>
             <select id="qrSuffix" class="form-select mb-1">
-                <option value="f4">F4 (Honeywell olvasó)</option>
+                <option value="f4-sep">F4 külön QR-ban – két csippantás (biztos)</option>
+                <option value="f4">F4 ugyanabban a QR-ban – egy csippantás</option>
                 <option value="none">Semmit – az F4-et kézzel nyomom</option>
                 <option value="tab-enter">TAB → ENTER</option>
                 <option value="tab-space">TAB → SZÓKÖZ</option>
                 <option value="tab2-enter">TAB → TAB → ENTER</option>
                 <option value="enter">ENTER</option>
             </select>
-            <div class="text-muted tiny mb-2">Ha az F4 nem lép be, válaszd a „Semmit”, és nyomd meg kézzel. Hibakereséshez: <a href="olvaso-teszt.html">olvasó teszt</a>.</div>
+            <div class="text-muted tiny mb-2">Az „egy csippantás” csak akkor megy, ha a jelszóban nincs AltGr-es karakter (pl. @, #, &), vagy az olvasón be van állítva késleltetés. Hibakereséshez: <a href="olvaso-teszt.html">olvasó teszt</a>.</div>
             <button class="btn btn-light btn-sm w-100 mb-3" id="testF4Btn">Teszt-QR: csak F4</button>
             <label class="form-label" for="qrTimeout">A QR ennyi idő után eltűnik</label>
             <select id="qrTimeout" class="form-select">
@@ -84,7 +85,14 @@
     <div class="qr-fullscreen hidden" id="qrFullscreen">
         <div class="qr-scroll-area">
             <div class="qr-meta">Csippantsd le a terminálnál!</div>
-            <div class="qr-large-box"><div id="mesQr"></div><div class="qr-label" id="mesQrUser"></div></div>
+            <div class="qr-large-box">
+                <div class="qr-step hidden" id="qrStep1">1. csippantás – adatok</div>
+                <div id="mesQr"></div><div class="qr-label" id="mesQrUser"></div>
+            </div>
+            <div class="qr-large-box qr-small hidden" id="qrBox2">
+                <div class="qr-step">2. csippantás – belépés (F4)</div>
+                <div id="mesQr2"></div>
+            </div>
             <div class="countdown hidden" id="countdown"><div class="countdown-bar" id="countdownBar"></div></div>
             <div class="text-muted small" id="countdownText"></div>
         </div>

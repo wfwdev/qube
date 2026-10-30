@@ -315,3 +315,11 @@ body.qr-open { overflow: hidden; }
 }
 .countdown { width: 100%; max-width: 400px; height: 8px; border-radius: 4px; background: var(--sur2); overflow: hidden; }
 .countdown-bar { height: 100%; width: 100%; background: var(--brand-grad); transition: width .25s linear; }
+.qr-step { font-weight: 700; font-size: .9rem; color: #444; margin-bottom: 10px; }
+.qr-large-box.qr-small { max-width: 260px; padding: 18px; }
+/* Két QR egy képernyőn, görgetés nélkül */
+.qr-scroll-area.two { gap: 12px; padding-top: calc(10px + env(safe-area-inset-top)); }
+.qr-scroll-area.two .qr-large-box { max-width: min(300px, 38vh); padding: 14px; }
+.qr-scroll-area.two .qr-large-box.qr-small { max-width: min(190px, 25vh); }
+.qr-scroll-area.two .qr-label { margin-top: 6px; }
+.qr-scroll-area.two .qr-step { margin-bottom: 6px; font-size: .8rem; }
