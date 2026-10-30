@@ -3,7 +3,7 @@
 // A MES felhasználónév és jelszó CSAK ezen a telefonon tárolódik
 // (localStorage, Qube-fiókonként külön), a szerverre nem kerül fel.
 // QR tartalma: felhasználónév + TAB + jelszó + beállítható lezárás
-// (alapból F4 – Honeywell olvasóval).
+// + F4 (egy vagy két QR-ban) + opcionálisan TAB.
 // ============================================================
 import { ready } from './session.js';
 import { $, feedback, toast, setPageTabs } from './ui.js';
@@ -15,17 +15,15 @@ const TIMEOUT_KEY = 'qube_mes_timeout';
 const SUFFIX_KEY = 'qube_mes_suffix';
 const AFTER_TAB_KEY = 'qube_mes_aftertab'; // F4 után még egy TAB (a következő fülre lép)
 // Honeywell olvasók (pl. Xenon XP 1950g): a 0x19 (EM) vezérlőkaraktert gyárilag
-// F4 billentyűként küldik (Function Code Transmit = Enable, Control+X mód kikapcsolva).
+// F4 billentyűként küldik. Két mód:
+//  - 'f4':     egy QR – felhasználónév, TAB, jelszó, F4
+//  - 'f4-sep': két QR – az F4 külön kódban (ha AltGr-es jelszónál túl gyors az egy QR)
+const F4 = '\x19';
 const SUFFIXES = {
-    'f4-sep': '',        // F4 külön, második QR-ban (AltGr-es jelszónál is biztos)
-    'f4': '\x19',
-    'tab-enter': '\t\r',
-    'tab-space': '\t ',
-    'tab2-enter': '\t\t\r',
-    'enter': '\r',
-    'none': ''
+    'f4': F4,
+    'f4-sep': ''
 };
-const DEFAULT_SUFFIX = 'f4-sep';
+const DEFAULT_SUFFIX = 'f4';
 const DEFAULT_TIMEOUT = 30;
 
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
@@ -127,27 +125,26 @@ const closeQr = () => {
     wakeLock?.release?.().catch(() => {}); wakeLock = null;
 };
 
-// test = 'f4': csak egy F4 billentyűt tartalmazó teszt-QR (hibakereséshez)
-const showQr = async (test = null) => {
+const showQr = async () => {
     const d = load();
-    if (!test && (!d?.user || !d?.pass)) return openForm();
+    if (!d?.user || !d?.pass) return openForm();
     if (typeof QRCode === 'undefined') { feedback('error'); return toast('A QR modul nem töltődött be. Frissíts!', 'error'); }
 
     feedback('success');
     $('#mesQr').innerHTML = '';
     const tail = afterTab() ? '\t' : '';
     const sid = getSuffixId();
-    const content = test === 'f4' ? SUFFIXES.f4 : `${d.user}\t${d.pass}${SUFFIXES[sid]}${sid === 'f4' ? tail : ''}`;
+    const content = `${d.user}\t${d.pass}${SUFFIXES[sid]}${sid === 'f4' ? tail : ''}`;
     new QRCode($('#mesQr'), { text: content, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
 
     // Külön F4 QR: 1. csippantás kitölti a mezőket, 2. csippantás belép
-    const sep = !test && getSuffixId() === 'f4-sep';
+    const sep = sid === 'f4-sep';
     $('#mesQr2').innerHTML = '';
-    if (sep) new QRCode($('#mesQr2'), { text: SUFFIXES.f4 + tail, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+    if (sep) new QRCode($('#mesQr2'), { text: F4 + tail, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
     $('#qrBox2').classList.toggle('hidden', !sep);
     $('#qrStep1').classList.toggle('hidden', !sep);
     document.querySelector('#qrFullscreen .qr-scroll-area').classList.toggle('two', sep);
-    $('#mesQrUser').textContent = test === 'f4' ? 'TESZT: csak F4' : d.user;
+    $('#mesQrUser').textContent = d.user;
     $('#qrFullscreen').classList.remove('hidden');
     document.body.classList.add('qr-open');
 
@@ -172,8 +169,7 @@ const showQr = async (test = null) => {
     timer = setInterval(tick, 250);
 };
 
-$('#showQrBtn').addEventListener('click', () => showQr());
-$('#testF4Btn').addEventListener('click', () => showQr('f4'));
+$('#showQrBtn').addEventListener('click', showQr);
 $('#qrClose').addEventListener('click', () => { feedback(); closeQr(); });
 // Háttérbe tett appnál eltűnik (kivéve "Csak ha bezárom" beállításnál)
 document.addEventListener('visibilitychange', () => {
