@@ -60,13 +60,14 @@
         <div class="minimal-card">
             <label class="form-label" for="qrSuffix">Jelszó után a QR ezt „nyomja meg”</label>
             <select id="qrSuffix" class="form-select mb-1">
-                <option value="tab-enter">TAB → ENTER (a belépés gombra lép és megnyomja)</option>
+                <option value="f4">F4 (Honeywell olvasó)</option>
+                <option value="none">Semmit – az F4-et kézzel nyomom</option>
+                <option value="tab-enter">TAB → ENTER</option>
                 <option value="tab-space">TAB → SZÓKÖZ</option>
                 <option value="tab2-enter">TAB → TAB → ENTER</option>
                 <option value="enter">ENTER</option>
-                <option value="none">Semmit (kézzel lépek be)</option>
             </select>
-            <div class="text-muted tiny mb-3">Ha nem lép be, próbáld a következőt – a termináltól függ, melyik működik.</div>
+            <div class="text-muted tiny mb-3">Ha az F4 nem lép be, válaszd a „Semmit”, és nyomd meg kézzel.</div>
             <label class="form-label" for="qrTimeout">A QR ennyi idő után eltűnik</label>
             <select id="qrTimeout" class="form-select">
                 <option value="15">15 másodperc</option>
