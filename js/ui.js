@@ -172,7 +172,7 @@ export const openSideMenu = () => {
         ${switchRow('settingFlash', 'Képernyő villanás', 'Vizuális visszajelzés')}
         ${switchRow('settingWakeLock', 'Ébrentartás', 'A kijelző nem alszik el')}
 
-        <div class="text-center text-muted tiny mt-4 pb-5">${esc(APP.name)} v${esc(APP.version)}</div>`;
+        <div class="text-center text-muted tiny mt-4 pb-5">${esc(APP.name)} v${esc(APP.version)} · ${esc(APP.build)}</div>`;
 
     const defaults = { settingAudio: true, settingVibrate: true, settingFlash: true, settingWakeLock: false };
     Object.entries(defaults).forEach(([key, def]) => {
@@ -261,6 +261,18 @@ export const renderChrome = (session) => {
 };
 
 // ---------- Service Worker + frissítés jelzés ----------
+let swReg = null;
+
+const applyUpdate = () => {
+    const btn = $('#updateBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Frissítés…';
+    const waiting = swReg?.waiting;
+    if (waiting) waiting.postMessage({ type: 'SKIP_WAITING' });
+    // Ha 4 mp alatt nem vált át (pl. a várakozó verzió közben megszűnt), sima újratöltés
+    setTimeout(() => location.reload(), waiting ? 4000 : 0);
+};
+
 const registerSW = () => {
     if (!('serviceWorker' in navigator)) return;
     let refreshing = false;
@@ -270,16 +282,17 @@ const registerSW = () => {
         location.reload();
     });
     navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
-        const showUpdate = (worker) => {
+        swReg = reg;
+        const showUpdate = () => {
             const btn = $('#updateBtn');
             btn.classList.remove('hidden');
-            btn.onclick = () => worker.postMessage({ type: 'SKIP_WAITING' });
+            btn.onclick = applyUpdate;
         };
-        if (reg.waiting && navigator.serviceWorker.controller) showUpdate(reg.waiting);
+        if (reg.waiting && navigator.serviceWorker.controller) showUpdate();
         reg.addEventListener('updatefound', () => {
             const nw = reg.installing;
             nw?.addEventListener('statechange', () => {
-                if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdate(nw);
+                if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdate();
             });
         });
         // Előtérbe kerüléskor frissítést keres
@@ -293,8 +306,9 @@ const registerSW = () => {
 // Ha az oldal 12 mp után is a "Betöltés…" állapotban áll, kiírja a hibát,
 // és lehetőséget ad a gyorsítótár törlésére.
 let lastError = '';
-window.addEventListener('error', (e) => { lastError = e.message || String(e.error || ''); });
-window.addEventListener('unhandledrejection', (e) => { lastError = String(e.reason?.code || e.reason?.message || e.reason || ''); });
+// Programhiba esetén nem várunk 12 mp-et
+window.addEventListener('error', (e) => { lastError = e.message || String(e.error || ''); setTimeout(checkStuck, 2500); });
+window.addEventListener('unhandledrejection', (e) => { lastError = String(e.reason?.code || e.reason?.message || e.reason || ''); setTimeout(checkStuck, 2500); });
 
 const resetApp = async () => {
     try {
@@ -307,7 +321,7 @@ const resetApp = async () => {
     location.reload();
 };
 
-const startWatchdog = () => setTimeout(() => {
+function checkStuck() {
     const scr = $('#appScreen');
     // Csak akkor szól, ha a betöltő tényleg látszik (nem töltött be, és nincs más üzenet)
     if (!scr || scr.classList.contains('hidden') || !scr.querySelector('.boot-loader')) return;
@@ -318,11 +332,12 @@ const startWatchdog = () => setTimeout(() => {
             <p class="text-muted small mb-0">Lassú vagy megszakadt a kapcsolat, esetleg egy régi verzió ragadt a telefonon.</p>
             <button class="btn btn-primary w-100 mt-4" id="wdReload">Újrapróbálás</button>
             <button class="btn btn-light w-100 mt-2" id="wdReset">Gyorsítótár törlése és újratöltés</button>
-            <div class="text-muted tiny mt-3">${esc(APP.name)} v${esc(APP.version)}${lastError ? ` · ${esc(lastError).slice(0, 160)}` : ''}</div>
+            <div class="text-muted tiny mt-3">${esc(APP.name)} v${esc(APP.version)} · ${esc(APP.build)}${lastError ? ` · ${esc(lastError).slice(0, 160)}` : ''}</div>
         </div>`);
     $('#wdReload').addEventListener('click', () => location.reload());
     $('#wdReset').addEventListener('click', resetApp);
-}, 12000);
+}
+const startWatchdog = () => setTimeout(checkStuck, 12000);
 
 injectShell();
 registerSW();

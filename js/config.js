@@ -6,7 +6,8 @@
 export const APP = {
     name: 'Qube',
     tagline: 'Gyári kódok, egy helyen',
-    version: '2.1.3'
+    version: '2.2.0',
+    build: 'dev'   // GitHub kiadáskor automatikusan a commit azonosítója kerül ide
 };
 
 // ------------------------------------------------------------
