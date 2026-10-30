@@ -96,8 +96,7 @@ const screenOnboarding = (uid) => {
 
 const screenForStatus = (d) => {
     if (d.status === 'conflict') {
-        return screenMessage('🔗', 'Összekapcsolásra vár',
-            `A(z) <b>${esc(d.empId)}</b> törzsszám már regisztrálva van egy másik eszközön. Szólj a műszak- vagy csoportvezetődnek, hogy kapcsolja össze a fiókodat. Ha megtörtént, ez az oldal magától továbblép.`);
+        return screenMessage('🔗', 'Összekapcsolás folyamatban', 'Kérem, várjon.');
     }
     if (d.status === 'disabled') {
         return screenMessage('⛔', 'Fiók letiltva', 'A fiókodat egy vezető letiltotta. Kérdés esetén keresd a csoportvezetődet.');
