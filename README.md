@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.1.0 – alapmodul (azonosítás, felhasználók, szerepkörök) és IC generátor kész. A MES terminál és a csomagoló kód a következő lépésekben jön.
+**Állapot:** v2.3.0 – alapmodul, IC generátor és MES terminál kész. A csomagoló kód a következő lépésben jön.
 
 ## Felépítés
 
@@ -25,13 +25,14 @@ js/ui.js            Navbar, alsó menü, profil panel, toast, visszajelzések
 js/home.js          Kezdőlap logika
 js/admin.js         Felhasználó- és szerepkörkezelés
 ic.html, js/ic.js   IC generátor (generálás, lista, statisztika)
+mes.html, js/mes.js MES terminál belépő QR
 ```
 
 ## IC generátor
 
 - **Generálás:** terület (ESS/WSS) → IC → mennyiség (max. 5000) → két QR, a régi rendszerrel azonos tartalommal.
 - **Offline:** az IC lista a telefonon is tárolódik. A generálás naplója egy helyi sorba kerül, és net esetén automatikusan feltöltődik.
-- **Lista** (`ic.manage`): IC felvétele, terület módosítása, törlés, importálás (beillesztés vagy egyszeri átvétel a régi rendszerből – `LEGACY_IC_SOURCE` a configban, utána törölhető).
+- **Lista** (`ic.manage`): IC felvétele, terület módosítása, törlés, importálás (soronként beillesztett számok).
 - **Statisztika** (`ic.stats`): napi és havi összesítő, IC-nként. Firestore: `ic_stats/d_ÉÉÉÉ-HH-NN` és `ic_stats/m_ÉÉÉÉ-HH` összesítő dokumentumok, a részletes napló az `ic_logs` kollekcióban.
 
 ## Hogyan működik az azonosítás
@@ -73,6 +74,12 @@ Az `admin` szerepkör mindig mindent elér.
    (iPhone-on a telepített app külön tárhelyet használ, mint a Safari – ezért előbb telepíts, utána regisztrálj.)
 2. Firebase konzol → Firestore → `users` → a saját dokumentumodnál a `role` mezőt írd át `admin`-ra.
 3. Az appban: Felhasználók → Szerepkörök → **Alapértelmezett szerepkörök feltöltése**.
+
+## MES terminál
+
+- A MES felhasználónév és jelszó **csak a telefonon** tárolódik (Qube-fiókonként külön), a szerverre nem kerül fel.
+- QR tartalma: `felhasználónév` + TAB + `jelszó` + ENTER – a terminál magától kitölti és belép.
+- A QR eltűnési ideje egyénileg állítható (15 mp – 2 perc, vagy csak bezáráskor). Amíg látszik, a kijelző nem alszik el; háttérbe tett appnál eltűnik.
 
 ## Kiadás (frissítés)
 

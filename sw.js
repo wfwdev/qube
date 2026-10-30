@@ -17,6 +17,7 @@ const APP_SHELL = [
     './index.html',
     './admin.html',
     './ic.html',
+    './mes.html',
     './style.css',
     './manifest.json',
     './icons/icon.svg',
@@ -32,7 +33,8 @@ const APP_SHELL = [
     './js/session.js',
     './js/home.js',
     './js/admin.js',
-    './js/ic.js'
+    './js/ic.js',
+    './js/mes.js'
 ];
 
 // Külső könyvtárak előre letöltve (offline használathoz) – ha nem sikerül, nem akadályozza a telepítést

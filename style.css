@@ -283,7 +283,7 @@ body.screen-open .bottom-nav, body.screen-open .app-main { display: none; }
 .bar { height: 8px; margin-top: 6px; border-radius: 4px; background: var(--sur2); overflow: hidden; }
 .bar span { display: block; height: 100%; border-radius: 4px; background: var(--brand-grad); }
 
-.qr-fullscreen { position: fixed; inset: 0; z-index: 3000; background: var(--bg); display: flex; flex-direction: column; }
+.qr-fullscreen { position: fixed; inset: 0; z-index: 3100; background: var(--bg); display: flex; flex-direction: column; }
 body.qr-open { overflow: hidden; }
 .qr-scroll-area {
     flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 20px;
@@ -304,3 +304,14 @@ body.qr-open { overflow: hidden; }
 }
 .last-gen:active { background: var(--sur2); }
 .last-gen-open { flex: none; font-weight: 700; color: var(--accent); }
+
+/* ---------- 11. MES terminál ---------- */
+.mes-ico { font-size: 2.4rem; margin-bottom: 6px; }
+.pass-wrap { position: relative; }
+.pass-wrap .form-control { padding-right: 52px; }
+.pass-eye {
+    position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+    width: 42px; height: 42px; border: 0; border-radius: 10px; background: transparent; font-size: 1.15rem;
+}
+.countdown { width: 100%; max-width: 400px; height: 8px; border-radius: 4px; background: var(--sur2); overflow: hidden; }
+.countdown-bar { height: 100%; width: 100%; background: var(--brand-grad); transition: width .25s linear; }
