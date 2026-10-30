@@ -116,15 +116,17 @@ const closeQr = () => {
     wakeLock?.release?.().catch(() => {}); wakeLock = null;
 };
 
-const showQr = async () => {
+// test = 'f4': csak egy F4 billentyűt tartalmazó teszt-QR (hibakereséshez)
+const showQr = async (test = null) => {
     const d = load();
-    if (!d?.user || !d?.pass) return openForm();
+    if (!test && (!d?.user || !d?.pass)) return openForm();
     if (typeof QRCode === 'undefined') { feedback('error'); return toast('A QR modul nem töltődött be. Frissíts!', 'error'); }
 
     feedback('success');
     $('#mesQr').innerHTML = '';
-    new QRCode($('#mesQr'), { text: `${d.user}\t${d.pass}${SUFFIXES[getSuffixId()]}`, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
-    $('#mesQrUser').textContent = d.user;
+    const content = test === 'f4' ? SUFFIXES.f4 : `${d.user}\t${d.pass}${SUFFIXES[getSuffixId()]}`;
+    new QRCode($('#mesQr'), { text: content, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+    $('#mesQrUser').textContent = test === 'f4' ? 'TESZT: csak F4' : d.user;
     $('#qrFullscreen').classList.remove('hidden');
     document.body.classList.add('qr-open');
 
@@ -149,7 +151,8 @@ const showQr = async () => {
     timer = setInterval(tick, 250);
 };
 
-$('#showQrBtn').addEventListener('click', showQr);
+$('#showQrBtn').addEventListener('click', () => showQr());
+$('#testF4Btn').addEventListener('click', () => showQr('f4'));
 $('#qrClose').addEventListener('click', () => { feedback(); closeQr(); });
 // Háttérbe tett appnál eltűnik (kivéve "Csak ha bezárom" beállításnál)
 document.addEventListener('visibilitychange', () => {
