@@ -3,7 +3,7 @@
 // A MES felhasználónév és jelszó CSAK ezen a telefonon tárolódik
 // (localStorage, Qube-fiókonként külön), a szerverre nem kerül fel.
 // QR tartalma: felhasználónév + TAB + jelszó + beállítható lezárás
-// (pl. TAB + ENTER: a belépés gombra lép és megnyomja).
+// (alapból F4 – Honeywell olvasóval).
 // ============================================================
 import { ready } from './session.js';
 import { $, feedback, toast, setPageTabs } from './ui.js';
@@ -13,14 +13,17 @@ const session = await ready;
 const KEY = `qube_mes_${session.uid}`;
 const TIMEOUT_KEY = 'qube_mes_timeout';
 const SUFFIX_KEY = 'qube_mes_suffix';
+// Honeywell olvasók (pl. Xenon XP 1950g): a 0x19 (EM) vezérlőkaraktert gyárilag
+// F4 billentyűként küldik (Function Code Transmit = Enable, Control+X mód kikapcsolva).
 const SUFFIXES = {
+    'f4': '\x19',
     'tab-enter': '\t\r',
     'tab-space': '\t ',
     'tab2-enter': '\t\t\r',
     'enter': '\r',
     'none': ''
 };
-const DEFAULT_SUFFIX = 'tab-enter';
+const DEFAULT_SUFFIX = 'f4';
 const DEFAULT_TIMEOUT = 30;
 
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
