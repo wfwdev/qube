@@ -2,8 +2,8 @@
 // MES terminál – belépő QR
 // A MES felhasználónév és jelszó CSAK ezen a telefonon tárolódik
 // (localStorage, Qube-fiókonként külön), a szerverre nem kerül fel.
-// QR tartalma: felhasználónév + TAB + jelszó + ENTER (a terminál így
-// magától kitölti a két mezőt és belép).
+// QR tartalma: felhasználónév + TAB + jelszó + beállítható lezárás
+// (pl. TAB + ENTER: a belépés gombra lép és megnyomja).
 // ============================================================
 import { ready } from './session.js';
 import { $, feedback, toast, setPageTabs } from './ui.js';
@@ -12,6 +12,15 @@ const session = await ready;
 
 const KEY = `qube_mes_${session.uid}`;
 const TIMEOUT_KEY = 'qube_mes_timeout';
+const SUFFIX_KEY = 'qube_mes_suffix';
+const SUFFIXES = {
+    'tab-enter': '\t\r',
+    'tab-space': '\t ',
+    'tab2-enter': '\t\t\r',
+    'enter': '\r',
+    'none': ''
+};
+const DEFAULT_SUFFIX = 'tab-enter';
 const DEFAULT_TIMEOUT = 30;
 
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
@@ -80,6 +89,18 @@ timeoutSel.addEventListener('change', () => {
     feedback(); toast('Beállítás mentve');
 });
 
+// ---------- Lezárás (egyéni beállítás) ----------
+const suffixSel = $('#qrSuffix');
+const getSuffixId = () => {
+    const v = localStorage.getItem(SUFFIX_KEY);
+    return v in SUFFIXES ? v : DEFAULT_SUFFIX;
+};
+suffixSel.value = getSuffixId();
+suffixSel.addEventListener('change', () => {
+    localStorage.setItem(SUFFIX_KEY, suffixSel.value);
+    feedback(); toast('Beállítás mentve');
+});
+
 // ---------- QR megjelenítés ----------
 let timer = null;
 let wakeLock = null;
@@ -99,7 +120,7 @@ const showQr = async () => {
 
     feedback('success');
     $('#mesQr').innerHTML = '';
-    new QRCode($('#mesQr'), { text: `${d.user}\t${d.pass}\r`, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+    new QRCode($('#mesQr'), { text: `${d.user}\t${d.pass}${SUFFIXES[getSuffixId()]}`, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
     $('#mesQrUser').textContent = d.user;
     $('#qrFullscreen').classList.remove('hidden');
     document.body.classList.add('qr-open');
