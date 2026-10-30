@@ -12,7 +12,7 @@ import {
     db, collection, doc, getDoc, onSnapshot, setDoc, deleteDoc,
     writeBatch, serverTimestamp, increment
 } from './firebase.js';
-import { IC, LEGACY_IC_SOURCE } from './config.js';
+import { IC } from './config.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
 
 const session = await ready;
@@ -354,13 +354,7 @@ function openImport() {
     feedback();
     const sheet = openSheet(`
         <h5 class="fw-bold mb-3">IC-k importálása</h5>
-        ${LEGACY_IC_SOURCE ? `
-        <div class="minimal-card p-3 mb-3">
-            <div class="fw-bold small mb-1">Átvétel a régi IC generátorból</div>
-            <div class="text-muted tiny mb-2">A régi rendszer teljes listáját területekkel együtt átmásolja. A már meglévőket kihagyja.</div>
-            <button class="btn btn-primary w-100" id="impLegacy">Régi lista átvétele</button>
-        </div>` : ''}
-        <label class="form-label">Vagy illeszd be a számokat</label>
+        <label class="form-label">Illeszd be a számokat</label>
         <textarea id="impText" class="form-control mono mb-2" rows="6" placeholder="Soronként egy IC szám (pontokkal, kötőjelekkel is jó)"></textarea>
         <label class="form-label">Terület</label>
         ${areaSelect('impArea', listArea !== 'all' ? listArea : genArea)}
@@ -389,42 +383,6 @@ function openImport() {
         const area = $('#impArea', sheet).value;
         await importItems(fresh.map((code) => ({ code, area })), $('#impSave', sheet));
     });
-    $('#impLegacy', sheet)?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget;
-        btn.disabled = true; btn.textContent = 'Lekérés…';
-        try {
-            const items = await fetchLegacy();
-            const fresh = items.filter((i) => !icList.some((x) => x.code === i.code));
-            if (!fresh.length) { toast(`Minden IC (${items.length}) már szerepel a listában.`); btn.textContent = 'Kész'; return; }
-            await importItems(fresh, btn);
-        } catch (err) {
-            console.error(err);
-            feedback('error'); toast('A régi rendszer nem érhető el. Használd a beillesztést.', 'error');
-            btn.disabled = false; btn.textContent = 'Régi lista átvétele';
-        }
-    });
-}
-
-async function fetchLegacy() {
-    const { projectId, apiKey, collection: col } = LEGACY_IC_SOURCE;
-    const out = [];
-    let pageToken = '';
-    do {
-        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${col}`
-            + `?pageSize=300&key=${apiKey}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        (json.documents || []).forEach((d) => {
-            const f = d.fields || {};
-            const code = cleanCode(f.code?.stringValue);
-            const area = f.type?.stringValue || f.area?.stringValue;
-            if (IC.codePattern.test(code) && IC.areas.includes(area)) out.push({ code, area });
-        });
-        pageToken = json.nextPageToken || '';
-    } while (pageToken);
-    // ismétlődők kiszűrése
-    return [...new Map(out.map((i) => [i.code, i])).values()];
 }
 
 async function importItems(items, btn) {

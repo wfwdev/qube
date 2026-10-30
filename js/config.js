@@ -74,11 +74,3 @@ export const IC = {
     maxAmount: 5000,                // max. mennyiség egy generálásnál
     codePattern: /^[A-Z0-9]{13}$/   // IC szám: 13 karakter (tisztítás után)
 };
-
-// Egyszeri átvétel a régi IC generátorból (admin → IC lista → Importálás).
-// Ha az átvétel megvolt, nyugodtan törölhető (legacy: null).
-export const LEGACY_IC_SOURCE = {
-    projectId: 'ic-generator-93915',
-    apiKey: 'AIzaSyAsthGIMXvc-pFXfc63tGEclGg5V6qCT0s',
-    collection: 'ic_numbers'
-};
