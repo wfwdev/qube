@@ -6,7 +6,7 @@
 export const APP = {
     name: 'Qube',
     tagline: 'Gyári kódok, egy helyen',
-    version: '2.2.0',
+    version: '2.3.0',
     build: 'dev'   // GitHub kiadáskor automatikusan a commit azonosítója kerül ide
 };
 
@@ -57,7 +57,7 @@ export const NEW_USER_ROLE = 'operator';
 // ------------------------------------------------------------
 export const MODULES = [
     { id: 'ic',   title: 'IC generátor',  desc: 'Nyersanyag azonosítók', icon: '⚡', color: 'orange', href: 'ic.html',   perm: 'ic.use',     ready: true },
-    { id: 'mes',  title: 'MES terminál',  desc: 'Belépés QR-ral',        icon: '💻', color: 'blue',   href: 'mes.html',  perm: 'mes.use',    ready: false },
+    { id: 'mes',  title: 'MES terminál',  desc: 'Belépés QR-ral',        icon: '💻', color: 'blue',   href: 'mes.html',  perm: 'mes.use',    ready: true },
     { id: 'pack', title: 'Csomagoló kód', desc: 'Csomagoló azonosítók',  icon: '📦', color: 'green',  href: 'pack.html', perm: 'pack.use',   ready: false },
     { id: 'admin',title: 'Felhasználók',  desc: 'Szerepkörök, fiókok',   icon: '👥', color: 'purple', href: 'admin.html',perm: 'users.view', ready: true }
 ];
