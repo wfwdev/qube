@@ -7,7 +7,7 @@
 // - Firebase API hívásokba nem nyúl
 // Új kiadásnál a VERSION-t emelni kell → megjelenik a "Frissítés" gomb.
 // ============================================================
-const VERSION = 'qube-v2.1.2';
+const VERSION = 'qube-v2.1.3';
 const CACHE = VERSION;
 const CDN_CACHE = 'qube-cdn-v1'; // verziózott URL-ek, kiadások között megmarad
 
