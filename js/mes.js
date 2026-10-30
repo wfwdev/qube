@@ -13,6 +13,7 @@ const session = await ready;
 const KEY = `qube_mes_${session.uid}`;
 const TIMEOUT_KEY = 'qube_mes_timeout';
 const SUFFIX_KEY = 'qube_mes_suffix';
+const AFTER_TAB_KEY = 'qube_mes_aftertab'; // F4 után még egy TAB (a következő fülre lép)
 // Honeywell olvasók (pl. Xenon XP 1950g): a 0x19 (EM) vezérlőkaraktert gyárilag
 // F4 billentyűként küldik (Function Code Transmit = Enable, Control+X mód kikapcsolva).
 const SUFFIXES = {
@@ -100,6 +101,14 @@ const getSuffixId = () => {
     return v in SUFFIXES ? v : DEFAULT_SUFFIX;
 };
 suffixSel.value = getSuffixId();
+const afterTab = () => localStorage.getItem(AFTER_TAB_KEY) !== 'false'; // alapból bekapcsolva
+const afterTabChk = $('#afterTab');
+afterTabChk.checked = afterTab();
+afterTabChk.addEventListener('change', () => {
+    localStorage.setItem(AFTER_TAB_KEY, afterTabChk.checked);
+    feedback(); toast('Beállítás mentve');
+});
+
 suffixSel.addEventListener('change', () => {
     localStorage.setItem(SUFFIX_KEY, suffixSel.value);
     feedback(); toast('Beállítás mentve');
@@ -126,13 +135,15 @@ const showQr = async (test = null) => {
 
     feedback('success');
     $('#mesQr').innerHTML = '';
-    const content = test === 'f4' ? SUFFIXES.f4 : `${d.user}\t${d.pass}${SUFFIXES[getSuffixId()]}`;
+    const tail = afterTab() ? '\t' : '';
+    const sid = getSuffixId();
+    const content = test === 'f4' ? SUFFIXES.f4 : `${d.user}\t${d.pass}${SUFFIXES[sid]}${sid === 'f4' ? tail : ''}`;
     new QRCode($('#mesQr'), { text: content, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
 
     // Külön F4 QR: 1. csippantás kitölti a mezőket, 2. csippantás belép
     const sep = !test && getSuffixId() === 'f4-sep';
     $('#mesQr2').innerHTML = '';
-    if (sep) new QRCode($('#mesQr2'), { text: SUFFIXES.f4, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+    if (sep) new QRCode($('#mesQr2'), { text: SUFFIXES.f4 + tail, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
     $('#qrBox2').classList.toggle('hidden', !sep);
     $('#qrStep1').classList.toggle('hidden', !sep);
     document.querySelector('#qrFullscreen .qr-scroll-area').classList.toggle('two', sep);
