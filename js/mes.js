@@ -16,6 +16,7 @@ const SUFFIX_KEY = 'qube_mes_suffix';
 // Honeywell olvasók (pl. Xenon XP 1950g): a 0x19 (EM) vezérlőkaraktert gyárilag
 // F4 billentyűként küldik (Function Code Transmit = Enable, Control+X mód kikapcsolva).
 const SUFFIXES = {
+    'f4-sep': '',        // F4 külön, második QR-ban (AltGr-es jelszónál is biztos)
     'f4': '\x19',
     'tab-enter': '\t\r',
     'tab-space': '\t ',
@@ -23,7 +24,7 @@ const SUFFIXES = {
     'enter': '\r',
     'none': ''
 };
-const DEFAULT_SUFFIX = 'f4';
+const DEFAULT_SUFFIX = 'f4-sep';
 const DEFAULT_TIMEOUT = 30;
 
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
@@ -111,6 +112,7 @@ let wakeLock = null;
 const closeQr = () => {
     clearInterval(timer); timer = null;
     $('#mesQr').innerHTML = ''; // a jelszó ne maradjon a képernyőn / DOM-ban
+    $('#mesQr2').innerHTML = '';
     $('#qrFullscreen').classList.add('hidden');
     document.body.classList.remove('qr-open');
     wakeLock?.release?.().catch(() => {}); wakeLock = null;
@@ -126,6 +128,14 @@ const showQr = async (test = null) => {
     $('#mesQr').innerHTML = '';
     const content = test === 'f4' ? SUFFIXES.f4 : `${d.user}\t${d.pass}${SUFFIXES[getSuffixId()]}`;
     new QRCode($('#mesQr'), { text: content, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+
+    // Külön F4 QR: 1. csippantás kitölti a mezőket, 2. csippantás belép
+    const sep = !test && getSuffixId() === 'f4-sep';
+    $('#mesQr2').innerHTML = '';
+    if (sep) new QRCode($('#mesQr2'), { text: SUFFIXES.f4, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+    $('#qrBox2').classList.toggle('hidden', !sep);
+    $('#qrStep1').classList.toggle('hidden', !sep);
+    document.querySelector('#qrFullscreen .qr-scroll-area').classList.toggle('two', sep);
     $('#mesQrUser').textContent = test === 'f4' ? 'TESZT: csak F4' : d.user;
     $('#qrFullscreen').classList.remove('hidden');
     document.body.classList.add('qr-open');
