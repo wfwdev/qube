@@ -6,7 +6,7 @@
 export const APP = {
     name: 'Qube',
     tagline: 'Gyári kódok, egy helyen',
-    version: '2.1.2'
+    version: '2.1.3'
 };
 
 // ------------------------------------------------------------

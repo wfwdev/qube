@@ -87,7 +87,8 @@ export const showScreen = (html) => {
     return s;
 };
 export const hideScreen = () => {
-    $('#appScreen')?.classList.add('hidden');
+    const s = $('#appScreen');
+    if (s) { s.classList.add('hidden'); s.innerHTML = ''; }
     document.body.classList.remove('screen-open');
 };
 
@@ -307,7 +308,9 @@ const resetApp = async () => {
 };
 
 const startWatchdog = () => setTimeout(() => {
-    if (!$('#appScreen .boot-loader')) return; // betöltött, vagy már üzenetet mutat
+    const scr = $('#appScreen');
+    // Csak akkor szól, ha a betöltő tényleg látszik (nem töltött be, és nincs más üzenet)
+    if (!scr || scr.classList.contains('hidden') || !scr.querySelector('.boot-loader')) return;
     showScreen(`
         <div class="screen-card text-center">
             <div class="screen-icon">🐢</div>
