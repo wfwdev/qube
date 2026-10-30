@@ -58,22 +58,16 @@
 
         <!-- BEÁLLÍTÁS -->
         <div class="minimal-card">
-            <label class="form-label" for="qrSuffix">Jelszó után a QR ezt „nyomja meg”</label>
+            <label class="form-label" for="qrSuffix">Belépés módja</label>
             <select id="qrSuffix" class="form-select mb-1">
-                <option value="f4-sep">F4 külön QR-ban – két csippantás (biztos)</option>
-                <option value="f4">F4 ugyanabban a QR-ban – egy csippantás</option>
-                <option value="none">Semmit – az F4-et kézzel nyomom</option>
-                <option value="tab-enter">TAB → ENTER</option>
-                <option value="tab-space">TAB → SZÓKÖZ</option>
-                <option value="tab2-enter">TAB → TAB → ENTER</option>
-                <option value="enter">ENTER</option>
+                <option value="f4">Egy QR kód – egy csippantás</option>
+                <option value="f4-sep">Két QR kód – külön F4</option>
             </select>
-            <div class="text-muted tiny mb-2">Az „egy csippantás” csak akkor megy, ha a jelszóban nincs AltGr-es karakter (pl. @, #, &), vagy az olvasón be van állítva késleltetés. Hibakereséshez: <a href="olvaso-teszt.html">olvasó teszt</a>.</div>
-            <label class="setting-row mb-2" for="afterTab">
+            <div class="text-muted tiny mb-3">Ha egy kóddal nem lép be (pl. @ vagy # van a jelszóban), válaszd a két kódot.</div>
+            <label class="setting-row mb-3" for="afterTab">
                 <div><div class="fw-bold small">Belépés után TAB</div><div class="text-muted tiny">Az F4 után a következő fülre lép</div></div>
                 <div class="form-check form-switch fs-5 mb-0"><input class="form-check-input" type="checkbox" role="switch" id="afterTab"></div>
             </label>
-            <button class="btn btn-light btn-sm w-100 mb-3" id="testF4Btn">Teszt-QR: csak F4</button>
             <label class="form-label" for="qrTimeout">A QR ennyi idő után eltűnik</label>
             <select id="qrTimeout" class="form-select">
                 <option value="15">15 másodperc</option>
