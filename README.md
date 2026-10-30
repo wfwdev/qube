@@ -16,6 +16,9 @@ manifest.json       PWA leíró
 firestore.rules     Firestore biztonsági szabályok
 js/config.js        App név, jogosultságok, szerepkörök, modulok
 js/firebase-config.js  Firebase kapcsolat adatai (a frissítések nem írják felül)
+reset.html          Vészkijárat: régi verzió / gyorsítótár törlése
+tools/check.mjs     Kiadás előtti ellenőrzés
+.github/workflows/  Automatikus kiadás (ellenőrzés → GitHub Pages)
 js/firebase.js      Firebase inicializálás (Auth + Firestore offline cache-sel)
 js/session.js       Névtelen belépés, regisztráció, szerepkör, oldalvédelem
 js/ui.js            Navbar, alsó menü, profil panel, toast, visszajelzések
@@ -71,13 +74,22 @@ Az `admin` szerepkör mindig mindent elér.
 2. Firebase konzol → Firestore → `users` → a saját dokumentumodnál a `role` mezőt írd át `admin`-ra.
 3. Az appban: Felhasználók → Szerepkörök → **Alapértelmezett szerepkörök feltöltése**.
 
-## Frissítés kiadása
+## Kiadás (frissítés)
 
-1. Az `sw.js`-ben emeld a `VERSION`-t (és a `js/config.js`-ben az `APP.version`-t) – **enélkül a telefonok nem kapják meg a változást**.
-2. Az összes módosított fájlt **egyetlen feltöltésben** tedd fel (GitHub → Add file → Upload files → mind egyszerre), hogy ne kerüljön félkész állapot a telefonokra.
-3. A telefonokon a fejlécben megjelenik a **Frissítés** gomb.
+A kiadást a GitHub végzi automatikusan (`.github/workflows/deploy.yml`):
 
-Új fájl esetén vedd fel az `sw.js` `APP_SHELL` listájába is. Ha egy telefon beragad a „Betöltés…” képernyőn, 12 mp után megjelenik a **Gyorsítótár törlése** gomb.
+1. Feltöltöd a módosított fájlokat.
+2. A GitHub lefuttatja az ellenőrzést (`tools/check.mjs`): szintaxis, importok, hiányzó vagy összekevert fájlok, Firebase adatok.
+3. **Ha hibát talál, nem kerül ki semmi** – élesben a korábbi, működő verzió marad. A hiba oka: repó → **Actions** fül → a piros sor.
+4. Ha minden rendben, a verziószámot automatikusan beírja (commit azonosító), és kiteszi. A telefonokon megjelenik a **Frissítés** gomb.
+
+Verziót kézzel emelni **nem kell**. Új fájlnál vedd fel az `sw.js` `APP_SHELL` listájába (az ellenőrzés szól, ha kimaradt).
+
+Egyszeri beállítás: **Settings → Pages → Source: GitHub Actions**.
+
+### Ha egy telefon beragad
+- 12 mp után (programhiba esetén 2–3 mp után) megjelenik a **Gyorsítótár törlése** gomb.
+- Vészkijárat: `…/qube/reset.html` megnyitása – törli a régi verziót, a bejelentkezés és a fel nem töltött generálások megmaradnak.
 
 ---
 **Fejlesztette:** Kovács Gábor

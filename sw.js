@@ -5,9 +5,10 @@
 //   keveredhet régi és új fájl.
 // - CDN könyvtárak (verziózott URL-ek): cache először
 // - Firebase API hívásokba nem nyúl
-// Új kiadásnál a VERSION-t emelni kell → megjelenik a "Frissítés" gomb.
+// A VERSION-t GitHub kiadáskor a deploy automatikusan átírja (commit azonosító),
+// így minden kiadás új verzió → megjelenik a "Frissítés" gomb. Kézzel nem kell emelni.
 // ============================================================
-const VERSION = 'qube-v2.1.3';
+const VERSION = 'qube-dev';
 const CACHE = VERSION;
 const CDN_CACHE = 'qube-cdn-v1'; // verziózott URL-ek, kiadások között megmarad
 
@@ -54,8 +55,14 @@ const CDN_HOSTS = [
 self.addEventListener('install', (e) => {
     e.waitUntil((async () => {
         const c = await caches.open(CACHE);
-        // cache: 'reload' → mindig a szerverről, nem a böngésző régi másolatából
-        await c.addAll(APP_SHELL.map((u) => new Request(u, { cache: 'reload' })));
+        // ?v=VERSION → a GitHub CDN sem adhat régi másolatot (más URL = friss lekérés),
+        // cache: 'reload' → a böngésző saját gyorsítótára sem. Ha bármelyik fájl hibás,
+        // a telepítés megszakad, és a régi, működő verzió marad.
+        await Promise.all(APP_SHELL.map(async (u) => {
+            const res = await fetch(new Request(`${u}?v=${VERSION}`, { cache: 'reload' }));
+            if (!res.ok) throw new Error(`${u}: HTTP ${res.status}`);
+            await c.put(u, res);
+        }));
         const cdn = await caches.open(CDN_CACHE);
         await Promise.allSettled(CDN_PRECACHE.map(async (u) => {
             if (!(await cdn.match(u))) await cdn.add(u);
@@ -105,6 +112,7 @@ self.addEventListener('fetch', (e) => {
     const url = new URL(req.url);
 
     if (url.origin === self.location.origin) {
+        if (url.pathname.endsWith('/reset.html')) return; // vészkijárat: mindig a hálózatról
         e.respondWith(appFile(req));
     } else if (CDN_HOSTS.includes(url.hostname)) {
         e.respondWith(cdnFile(req));
