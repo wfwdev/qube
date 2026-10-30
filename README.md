@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.3.0 – alapmodul, IC generátor és MES terminál kész. A csomagoló kód a következő lépésben jön.
+**Állapot:** v2.4.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
 
 ## Felépítés
 
@@ -26,6 +26,7 @@ js/home.js          Kezdőlap logika
 js/admin.js         Felhasználó- és szerepkörkezelés
 ic.html, js/ic.js   IC generátor (generálás, lista, statisztika)
 mes.html, js/mes.js MES terminál belépő QR
+pack.html, js/pack.js Csomagoló kód QR
 ```
 
 ## IC generátor
@@ -80,6 +81,11 @@ Az `admin` szerepkör mindig mindent elér.
 - A MES felhasználónév és jelszó **csak a telefonon** tárolódik (Qube-fiókonként külön), a szerverre nem kerül fel.
 - QR tartalma: `felhasználónév` + TAB + `jelszó` + ENTER – a terminál magától kitölti és belép.
 - A QR eltűnési ideje egyénileg állítható (15 mp – 2 perc, vagy csak bezáráskor). Amíg látszik, a kijelző nem alszik el; háttérbe tett appnál eltűnik.
+
+## Csomagoló kód
+
+- Egy számkód, **csak a telefonon** tárolva (Qube-fiókonként külön).
+- A QR pontosan a számot tartalmazza (nincs utána TAB / ENTER / F4). Az eltűnési idő egyénileg állítható.
 
 ## Kiadás (frissítés)
 
