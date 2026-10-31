@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.4.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
+**Állapot:** v2.5.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
 
 ## Felépítés
 
@@ -27,6 +27,7 @@ js/admin.js         Felhasználó- és szerepkörkezelés
 ic.html, js/ic.js   IC generátor (generálás, lista, statisztika)
 mes.html, js/mes.js MES terminál belépő QR
 pack.html, js/pack.js Csomagoló kód QR
+info.html, js/info.js Felhasználói tudnivalók (belépés nélkül is elérhető)
 ```
 
 ## IC generátor

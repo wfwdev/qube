@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Infó · Qube</title>
+    <meta name="theme-color" content="#ff5f00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="info" data-title="Infó">
+    <script>if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-mode');</script>
+
+    <main class="container app-main info">
+        <div class="info-hero">
+            <img src="icons/icon-192.png" alt="" width="64" height="64">
+            <div>
+                <h4 class="fw-bold mb-0">Qube</h4>
+                <div class="text-muted small">Gyári kódok, egy helyen</div>
+                <div class="text-muted tiny" id="appVersion"></div>
+            </div>
+        </div>
+
+        <div class="notice hidden" id="installState"></div>
+
+        <!-- ============ ALAPOK ============ -->
+        <details class="info-sec" open>
+            <summary>📱 Mi a Qube?</summary>
+            <p>A Qube a gyártósori munkát segítő telefonos alkalmazás. Három fő funkciója:</p>
+            <ul>
+                <li><b>IC generátor</b> – nyersanyag-azonosító QR kódok készítése.</li>
+                <li><b>MES terminál</b> – belépés a MES terminálba egy QR kód lecsippantásával.</li>
+                <li><b>Csomagoló kód</b> – a saját csomagoló kódod QR kódként.</li>
+            </ul>
+            <p><b>Csak telefonra készült</b>, álló helyzetben. Tableten és számítógépen is megnyílik, de a kezelőfelület telefonra van optimalizálva.</p>
+        </details>
+
+        <details class="info-sec">
+            <summary>🧩 Mi az a PWA?</summary>
+            <p>A Qube egy <b>PWA</b> (Progressive Web App): weboldalként működik, de a telefonra <b>alkalmazásként telepíthető</b>.</p>
+            <ul>
+                <li>Nem kell App Store vagy Google Play – közvetlenül a böngészőből telepíthető.</li>
+                <li>Saját ikonja lesz a kezdőképernyőn, és teljes képernyőn, böngészősáv nélkül nyílik meg.</li>
+                <li>Alig foglal helyet, és <b>internet nélkül is elindul</b> (lásd lent).</li>
+                <li>A frissítéseket magától letölti – nem kell újratelepíteni.</li>
+            </ul>
+        </details>
+
+        <!-- ============ TELEPÍTÉS ============ -->
+        <details class="info-sec" id="secIos">
+            <summary>🍎 Telepítés iPhone-ra</summary>
+            <ol>
+                <li>Nyisd meg a Qube linkjét a <b>Safari</b> böngészőben. (Chrome-ból vagy más böngészőből iPhone-on nem telepíthető megfelelően.)</li>
+                <li>Koppints alul a <b>Megosztás</b> ikonra (négyzet felfelé mutató nyíllal).</li>
+                <li>Görgess le, és válaszd a <b>„Főképernyőhöz adás”</b> lehetőséget.</li>
+                <li>Koppints a <b>Hozzáadás</b> gombra.</li>
+                <li>Ezután <b>mindig a kezdőképernyőn lévő Qube ikonról</b> indítsd.</li>
+            </ol>
+            <div class="info-warn">⚠️ <b>Fontos:</b> iPhone-on a telepített app és a Safari külön tárhelyet használ. Ezért <b>előbb telepítsd</b>, és a regisztrációt (név, törzsszám) már a telepített appban végezd el. Ha Safariban regisztráltál, a telepített app új felhasználónak lát, és összekapcsolás kell.</div>
+        </details>
+
+        <details class="info-sec" id="secAndroid">
+            <summary>🤖 Telepítés Androidra</summary>
+            <p><b>Chrome böngészővel:</b></p>
+            <ol>
+                <li>Nyisd meg a Qube linkjét a <b>Chrome</b>-ban.</li>
+                <li>Koppints a jobb felső <b>⋮</b> (három pont) menüre.</li>
+                <li>Válaszd az <b>„Alkalmazás telepítése”</b> vagy a <b>„Hozzáadás a kezdőképernyőhöz”</b> pontot.</li>
+                <li>Erősítsd meg a <b>Telepítés</b> gombbal.</li>
+            </ol>
+            <p><b>Samsung Internet böngészővel:</b> menü (☰) → <b>Oldal hozzáadása</b> → <b>Kezdőképernyő</b>.</p>
+            <p class="text-muted small">Előfordulhat, hogy a Chrome magától felajánlja a telepítést egy alsó sávban – ilyenkor elég arra koppintani.</p>
+        </details>
+
+        <!-- ============ HASZNÁLAT ============ -->
+        <details class="info-sec">
+            <summary>👤 Azonosítás és fiók</summary>
+            <ul>
+                <li><b>Nincs jelszó és belépési oldal.</b> Első indításkor csak a <b>neved</b> és a <b>törzsszámod</b> kell megadni – ez alapján azonosít az app.</li>
+                <li>Egy törzsszámhoz <b>egy fiók</b> tartozik. Új fiók mindig <b>Operátor</b> szerepkörrel indul.</li>
+                <li>A neved a kezdőlapon a <b>Profil</b> menüben módosíthatod, a törzsszámot csak admin javíthatja.</li>
+                <li><b>Telefoncsere vagy a böngészőadatok törlése után</b> az app új eszközként lát. Ilyenkor az „<b>Összekapcsolás folyamatban</b>” felirat jelenik meg: szólj egy vezetőnek, aki összekapcsolja a régi fiókoddal. Ezután a szerepköröd is visszajön, az oldal magától továbblép.</li>
+            </ul>
+        </details>
+
+        <details class="info-sec">
+            <summary>🛡️ Szerepkörök</summary>
+            <table class="info-table">
+                <tr><th>Operátor</th><td>IC generálás, MES terminál, csomagoló kód</td></tr>
+                <tr><th>Műszakvezető</th><td>+ IC statisztika, felhasználók megtekintése</td></tr>
+                <tr><th>Csoportvezető</th><td>+ IC lista szerkesztése, felhasználók kezelése (szerepkör, letiltás)</td></tr>
+                <tr><th>Admin</th><td>Minden, beleértve a szerepkörök szerkesztését és a fiókok összekapcsolását</td></tr>
+            </table>
+            <p class="text-muted small mt-2">A pontos jogosultságokat az admin állíthatja be, ezért nálatok eltérhetnek.</p>
+        </details>
+
+        <details class="info-sec">
+            <summary>⚡ IC generátor</summary>
+            <ul>
+                <li>Válaszd ki a területet (ESS / WSS), az IC-t és a mennyiséget (max. 5000), majd <b>Generálás</b>.</li>
+                <li>Két QR kód jelenik meg – ezeket kell lecsippantani.</li>
+                <li>Bezárás után a mezők kiürülnek. Az <b>Utolsó generálás</b> kártyára koppintva ugyanaz a két QR újra megnyitható (ez nem számít új generálásnak).</li>
+                <li>Vezetőknek: <b>Lista</b> (IC-k felvétele, törlése, importálása) és <b>Statisztika</b> (napi, havi, IC-nként).</li>
+            </ul>
+        </details>
+
+        <details class="info-sec">
+            <summary>💻 MES terminál</summary>
+            <ul>
+                <li>Egyszer add meg a MES felhasználóneved és jelszavad, utána a <b>Belépő QR megjelenítése</b> gombbal egy csippantással beléphetsz.</li>
+                <li><b>Belépés módja:</b> „Egy QR kód” – egy csippantás. Ha így nem lép be (pl. <b>@</b> vagy <b>#</b> van a jelszavadban), válaszd a „<b>Két QR kód</b>” módot: az első kitölti az adatokat, a második belép (F4).</li>
+                <li><b>Belépés után TAB:</b> belépés után a következő mezőre lép. Kikapcsolható.</li>
+                <li>A QR a beállított idő után <b>magától eltűnik</b> (15 mp – 2 perc, vagy csak bezáráskor).</li>
+            </ul>
+        </details>
+
+        <details class="info-sec">
+            <summary>📦 Csomagoló kód</summary>
+            <ul>
+                <li>Egyszer add meg a számkódodat, utána a <b>QR megjelenítése</b> gombbal bármikor előhívható.</li>
+                <li>A QR pontosan a számot tartalmazza.</li>
+                <li>Az eltűnési idő itt is beállítható.</li>
+            </ul>
+        </details>
+
+        <!-- ============ OFFLINE ============ -->
+        <details class="info-sec">
+            <summary>📶 Internet nélkül</summary>
+            <p>Ha a Qube-ot egyszer már megnyitottad internettel, utána <b>internet nélkül is elindul</b>.</p>
+            <table class="info-table">
+                <tr><th>✅ Működik</th><td>MES belépő QR, csomagoló kód QR, IC generálás (a telefonon tárolt IC listából), utolsó generálás visszanézése</td></tr>
+                <tr><th>⏳ Később tölti fel</th><td>Az IC generálások naplója – „feltöltésre vár” jelzéssel, és amint van net, magától elküldi</td></tr>
+                <tr><th>❌ Internet kell</th><td>Első regisztráció, IC lista módosítása, statisztika, felhasználók kezelése, frissítések letöltése</td></tr>
+            </table>
+        </details>
+
+        <!-- ============ ADATKEZELÉS ============ -->
+        <details class="info-sec">
+            <summary>🔒 Adatkezelés – mi hol tárolódik?</summary>
+            <p><b>Csak a telefonodon</b> (soha nem kerül szerverre):</p>
+            <ul>
+                <li>MES felhasználónév és jelszó</li>
+                <li>Csomagoló kód</li>
+                <li>Az utolsó IC generálás és a beállításaid (téma, hang, rezgés, QR idők)</li>
+            </ul>
+            <p><b>A szerveren</b> (Google Firebase, a működéshez szükséges minimum):</p>
+            <ul>
+                <li>Név, törzsszám, szerepkör, regisztráció és utolsó aktivitás ideje</li>
+                <li>IC lista</li>
+                <li>IC generálások naplója: ki, mikor, melyik IC-ből, mennyit – és ebből a statisztika</li>
+            </ul>
+            <div class="info-warn">🔐 A MES jelszavad a telefon tárhelyén van. Használj képernyőzárat, és ne add kölcsön feloldott telefont. Ha a telefont lecseréled vagy leadod, a MES oldalon töröld az adatokat.</div>
+        </details>
+
+        <!-- ============ FRISSÍTÉS ÉS HIBÁK ============ -->
+        <details class="info-sec">
+            <summary>🔄 Frissítések</summary>
+            <ul>
+                <li>Új verzió esetén a fejlécben megjelenik a sárga <b>🔄 Frissítés</b> gomb – koppints rá, és az app újratölt az új verzióval.</li>
+                <li>Amíg nem nyomod meg, a régi verzió zavartalanul működik tovább.</li>
+            </ul>
+        </details>
+
+        <details class="info-sec">
+            <summary>🛠️ Hibaelhárítás</summary>
+            <dl class="info-faq">
+                <dt>Nem tölt be, csak a „Betöltés…” látszik</dt>
+                <dd>Várj pár másodpercet: megjelenik a <b>Gyorsítótár törlése</b> gomb. Ha az sem segít, nyisd meg a <a href="reset.html">reset oldalt</a> – a bejelentkezésed és a fel nem töltött generálások megmaradnak.</dd>
+                <dt>„Összekapcsolás folyamatban”</dt>
+                <dd>Az app új eszközként lát (új telefon vagy törölt adatok). Szólj egy vezetőnek, aki összekapcsolja a fiókodat.</dd>
+                <dt>A MES terminál nem léptet be</dt>
+                <dd>Állítsd a belépés módját „<b>Két QR kód</b>”-ra. Ellenőrizd a mentett felhasználónevet és jelszót az „Adatok módosítása” gombbal.</dd>
+                <dt>Az olvasó nem olvassa a QR-t</dt>
+                <dd>Növeld a telefon fényerejét, kerüld a tükröződést, és tartsd a telefont 10–20 cm-re az olvasótól.</dd>
+                <dt>Nem látok egy modult a kezdőlapon</dt>
+                <dd>A szerepköröd nem ad hozzá jogot. Szólj a csoportvezetődnek vagy az adminnak.</dd>
+            </dl>
+        </details>
+
+        <div class="text-center text-muted tiny mt-4 mb-2">
+            Kérdés esetén keresd a csoportvezetődet vagy az adminisztrátort.<br>
+            Fejlesztette: Kovács Gábor
+        </div>
+    </main>
+
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/info.js"></script>
+</body>
+</html>
