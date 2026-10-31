@@ -218,10 +218,12 @@ const renderNav = () => {
     const page = document.body.dataset.page;
     const home = { id: 'home', icon: '🏠', label: 'Kezdőlap', go: 'index.html' };
     const profile = { id: 'profile', icon: '👤', label: 'Profil', action: openSideMenu };
-    // A Profil csak a kezdőlapon van
+    const info = { id: 'info', icon: 'ℹ️', label: 'Infó', go: 'info.html' };
+    // A Profil és az Infó csak a kezdőlapon van (az Infó a jobb szélen)
+    const onHome = page === 'home';
     const items = (pageTabs
         ? [home, ...pageTabs.map((t) => ({ ...t, tab: true }))]
-        : [home, sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' }, page === 'home' && profile]
+        : [home, sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' }, onHome && profile, onHome && info]
     ).filter(Boolean);
 
     const isActive = (i) => (i.tab ? i.id === activeTab : !pageTabs && i.id === page);

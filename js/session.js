@@ -71,6 +71,7 @@ const screenOnboarding = (uid) => {
             <label class="form-label">Törzsszám</label>
             <input type="text" id="obEmpId" class="form-control form-control-lg mb-4" inputmode="numeric" maxlength="10" placeholder="Pl. 10482">
             <button class="btn btn-primary btn-lg w-100" id="obSave">Tovább</button>
+            <a class="d-block text-center small mt-3" href="info.html">📱 Telepítés és tudnivalók</a>
         </div>`);
 
     const btn = $('#obSave', s);
