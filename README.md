@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.5.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
+**Állapot:** v2.6.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
 
 ## Felépítés
 
@@ -28,6 +28,9 @@ ic.html, js/ic.js   IC generátor (generálás, lista, statisztika)
 mes.html, js/mes.js MES terminál belépő QR
 pack.html, js/pack.js Csomagoló kód QR
 info.html, js/info.js Felhasználói tudnivalók (belépés nélkül is elérhető)
+settings.html, js/settings.js  Admin beállítások (funkciók ki/be)
+js/features.js      Beállítások betöltése/mentése (Firestore: settings/app)
+js/advent.js        Adventi naptár és hóesés
 ```
 
 ## IC generátor
@@ -87,6 +90,12 @@ Az `admin` szerepkör mindig mindent elér.
 
 - Egy számkód, **csak a telefonon** tárolva (Qube-fiókonként külön).
 - A QR pontosan a számot tartalmazza (nincs utána TAB / ENTER / F4). Az eltűnési idő egyénileg állítható.
+
+## Beállítások (csak admin)
+
+A kezdőlapon a **Beállítások** csempe csak az adminnak látszik (`admin.only` – szerepkörhöz nem rendelhető). Firestore: `settings/app`, mindenki olvassa, csak admin írja.
+
+- **Adventi naptár:** be/ki, hóesés be/ki, a 24 napi üzenet szerkeszthető, előnézet bármelyik napra. December 1–24. között naponta egy újabb ablak nyitható, 25–31. között mind. A kinyitott ablakok telefononként tárolódnak.
 
 ## Kiadás (frissítés)
 

@@ -151,6 +151,14 @@ service cloud.firestore {
         && validAmount(request.resource.data.amount - resource.data.amount);
     }
 
+    // ============================================================
+    // BEÁLLÍTÁSOK (adventi naptár stb.) – mindenki olvassa, csak admin írja
+    // ============================================================
+    match /settings/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
     // ---------- Modulok (következő lépésekben) ----------
     // MES terminál, csomagoló kód
   }

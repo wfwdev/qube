@@ -358,3 +358,61 @@ body.qr-open { overflow: hidden; }
 .info-faq dt { font-weight: 700; font-size: .92rem; margin-top: 12px; }
 .info-faq dt:first-child { margin-top: 0; }
 .info-faq dd { margin: 4px 0 0; }
+
+/* ---------- 13. Beállítások ---------- */
+.tile-gray .tile-icon { background: rgba(100, 116, 139, .15); }
+.msg-list { border: 1px solid var(--bord); border-radius: 12px; overflow: hidden; }
+.msg-row {
+    width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+    border: 0; background: transparent; color: var(--tx); text-align: left; font-size: .88rem;
+}
+.msg-row + .msg-row { border-top: 1px solid var(--bord); }
+.msg-row:active { background: var(--sur2); }
+.msg-day {
+    flex: none; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    background: rgba(201, 42, 42, .12); color: #c92a2a; font-weight: 700; font-size: .8rem;
+}
+.msg-text { flex: 1; line-height: 1.35; padding-top: 4px; }
+.msg-edited { flex: none; color: var(--accent); padding-top: 4px; }
+
+/* ---------- 14. Adventi naptár ---------- */
+.advent-card {
+    width: 100%; display: flex; align-items: center; gap: 14px; position: relative;
+    padding: 16px 18px; margin-bottom: 16px; border: 0; border-radius: 16px; color: #fff;
+    background: linear-gradient(135deg, #c92a2a, #1f7a3f);
+    box-shadow: 0 6px 18px rgba(201, 42, 42, .25);
+}
+.advent-card:active { transform: scale(.98); }
+.advent-card-ico { font-size: 2rem; line-height: 1; }
+.advent-dot { position: absolute; top: 12px; right: 14px; width: 10px; height: 10px; border-radius: 50%; background: #ffd43b; box-shadow: 0 0 0 4px rgba(255, 212, 59, .35); animation: pulseDot 1.6s infinite; }
+@keyframes pulseDot { 50% { box-shadow: 0 0 0 8px rgba(255, 212, 59, 0); } }
+
+.advent-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.advent-day {
+    position: relative; aspect-ratio: 1; border-radius: 12px; border: 0; color: #fff; font-weight: 800; font-size: 1.15rem;
+    background: linear-gradient(145deg, #c92a2a, #9b1c1c);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .15);
+}
+.advent-day:nth-child(3n+2) { background: linear-gradient(145deg, #2b8a3e, #1f6b30); }
+.advent-day:nth-child(4n+3) { background: linear-gradient(145deg, #d4a017, #a87b00); }
+.advent-day.locked { opacity: .35; filter: grayscale(.4); }
+.advent-day.opened { background: var(--sur2); color: var(--tx2); box-shadow: inset 0 0 0 2px var(--bord); }
+.advent-day.opened .advent-num { position: absolute; bottom: 4px; right: 7px; font-size: .7rem; }
+.advent-gift { font-size: 1.5rem; }
+.advent-day.today { animation: wiggle 1.8s infinite; box-shadow: 0 0 0 3px #ffd43b; }
+@keyframes wiggle { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-4deg); } 90% { transform: rotate(4deg); } 95% { transform: rotate(-2deg); } }
+.advent-msg {
+    margin-top: 14px; padding: 14px 16px; border-radius: 14px; text-align: center; font-size: 1rem; line-height: 1.45;
+    background: rgba(201, 42, 42, .08); border: 1px dashed rgba(201, 42, 42, .4);
+}
+.advent-msg-day { font-size: .75rem; font-weight: 700; color: #c92a2a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.advent-msg.pop { animation: pop .35s ease-out; }
+@keyframes pop { from { transform: scale(.9); opacity: 0; } }
+
+.snow-layer { position: fixed; inset: 0; pointer-events: none; z-index: 1030; overflow: hidden; }
+.snowflake {
+    position: absolute; top: -20px; color: #9fb4c8; opacity: .7; user-select: none;
+    animation-name: snowFall; animation-timing-function: linear; animation-fill-mode: forwards;
+}
+body.dark-mode .snowflake { color: #fff; opacity: .45; }
+@keyframes snowFall { to { transform: translateY(105vh) rotate(300deg); } }

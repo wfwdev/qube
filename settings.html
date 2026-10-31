@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Beállítások · Qube</title>
+    <meta name="theme-color" content="#ff5f00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="settings" data-title="Beállítások" data-perm="admin.only">
+    <script>if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-mode');</script>
+
+    <main class="container app-main">
+        <p class="text-muted small">Az itt beállított funkciók minden felhasználónál érvényesek. Ezt az oldalt csak admin éri el.</p>
+
+        <!-- ADVENTI NAPTÁR -->
+        <section class="minimal-card">
+            <h5 class="fw-bold mb-3">🎄 Adventi naptár</h5>
+            <label class="setting-row" for="advEnabled">
+                <div><div class="fw-bold small">Bekapcsolva</div><div class="text-muted tiny">December 1–31. között a kezdőlapon</div></div>
+                <div class="form-check form-switch fs-5 mb-0"><input class="form-check-input" type="checkbox" role="switch" id="advEnabled"></div>
+            </label>
+            <label class="setting-row" for="advSnow">
+                <div><div class="fw-bold small">Hóesés</div><div class="text-muted tiny">A kezdőlapon, amíg a naptár látszik</div></div>
+                <div class="form-check form-switch fs-5 mb-0"><input class="form-check-input" type="checkbox" role="switch" id="advSnow"></div>
+            </label>
+            <div class="text-muted tiny mb-3" id="advStatus"></div>
+
+            <label class="form-label">Előnézet</label>
+            <div class="d-flex gap-2 mb-4">
+                <select id="advPreviewDay" class="form-select"></select>
+                <button class="btn btn-light px-3 text-nowrap" id="advPreview">Megnézem</button>
+            </div>
+
+            <label class="form-label">Napi üzenetek</label>
+            <div class="msg-list" id="advMsgs"></div>
+        </section>
+    </main>
+
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/settings.js"></script>
+</body>
+</html>
