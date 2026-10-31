@@ -6,7 +6,7 @@
 export const APP = {
     name: 'Qube',
     tagline: 'Gyári kódok, egy helyen',
-    version: '2.5.0',
+    version: '2.6.0',
     build: 'dev'   // GitHub kiadáskor automatikusan a commit azonosítója kerül ide
 };
 
@@ -59,7 +59,9 @@ export const MODULES = [
     { id: 'ic',   title: 'IC generátor',  desc: 'Nyersanyag azonosítók', icon: '⚡', color: 'orange', href: 'ic.html',   perm: 'ic.use',     ready: true },
     { id: 'mes',  title: 'MES terminál',  desc: 'Belépés QR-ral',        icon: '💻', color: 'blue',   href: 'mes.html',  perm: 'mes.use',    ready: true },
     { id: 'pack', title: 'Csomagoló kód', desc: 'Csomagoló azonosítók',  icon: '📦', color: 'green',  href: 'pack.html', perm: 'pack.use',   ready: true },
-    { id: 'admin',title: 'Felhasználók',  desc: 'Szerepkörök, fiókok',   icon: '👥', color: 'purple', href: 'admin.html',perm: 'users.view', ready: true }
+    { id: 'admin',title: 'Felhasználók',  desc: 'Szerepkörök, fiókok',   icon: '👥', color: 'purple', href: 'admin.html',perm: 'users.view', ready: true },
+    // 'admin.only': nem szerepkör-jogosultság, ezért csak az admin látja (a szerepkörökhöz nem rendelhető)
+    { id: 'settings', title: 'Beállítások', desc: 'Funkciók ki/be',       icon: '⚙️', color: 'gray',   href: 'settings.html', perm: 'admin.only', ready: true }
 ];
 
 // Törzsszám formátum: csak számjegyek, 3–10 karakter (igény szerint módosítható,
