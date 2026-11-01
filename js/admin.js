@@ -7,6 +7,7 @@ import {
 } from './firebase.js';
 import { PERMISSIONS, DEFAULT_ROLES, NEW_USER_ROLE, EMP_ID_PATTERN } from './config.js';
 import { esc, $, feedback, toast, openSheet, closeSheet } from './ui.js';
+import { registerHelp } from './help.js';
 
 const session = await ready;
 const canManage = session.can('users.manage');
@@ -349,3 +350,6 @@ onSnapshot(collection(db, 'users'), (snap) => {
     renderUsers();
     if (isAdmin) renderRoles();
 }, (e) => fail(e, 'A felhasználók nem tölthetők be.'));
+
+// ❓ Súgó az alsó menüben
+registerHelp('admin');

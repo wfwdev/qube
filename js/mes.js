@@ -7,6 +7,7 @@
 // ============================================================
 import { ready } from './session.js';
 import { $, feedback, toast, setPageTabs } from './ui.js';
+import { registerHelp } from './help.js';
 
 const session = await ready;
 
@@ -179,3 +180,6 @@ document.addEventListener('visibilitychange', () => {
 // Alsó menü: Kezdőlap · MES
 setPageTabs([{ id: 'mes', icon: '💻', label: 'Belépő QR' }], () => {});
 render();
+
+// ❓ Súgó az alsó menüben
+registerHelp('mes');

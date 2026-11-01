@@ -5,6 +5,7 @@ import { ready } from './session.js';
 import { MODULES } from './config.js';
 import { esc, $, feedback, toast } from './ui.js';
 import { cachedSettings, loadSettings } from './features.js';
+import { flushFeedback } from './feedback-store.js';
 import { adventDay, adventTeaser, daysUntilAdvent, openAdvent, openedKey, showPop, startSnow, az } from './advent.js';
 
 const session = await ready;
@@ -14,7 +15,7 @@ $('#greeting').textContent = `Szia, ${firstName}!`;
 $('#roleLine').textContent = session.roleLabel;
 
 if (session.roleMissing) {
-    $('#notice').innerHTML = `<div class="notice">A(z) „${esc(session.role)}” szerepkör még nincs beállítva. Szólj az adminnak.</div>`;
+    $('#notice').innerHTML = `<div class="notice">A szerepköröd még nincs beállítva – az adminisztrátor hamarosan beállítja.</div>`;
 } else if (session.isAdmin) {
     // Admin figyelmeztetés, ha a szerepkörök még nincsenek feltöltve.
     // Nem várunk rá: a csempék azonnal megjelennek, ez a háttérben fut.
@@ -31,7 +32,7 @@ async function checkRolesSeeded() {
     } catch { /* nem kritikus */ }
 }
 
-const visible = MODULES.filter((m) => session.can(m.perm));
+const visible = MODULES.filter((m) => !m.perm || session.can(m.perm));
 $('#tiles').innerHTML = visible.length
     ? visible.map((m) => `
         <button class="dashboard-tile tile-${esc(m.color)} ${m.ready ? '' : 'tile-soon'}" data-id="${esc(m.id)}">
@@ -108,3 +109,19 @@ $('#sheetOverlay').addEventListener('click', () => setTimeout(renderFeatures, 50
 settings = cachedSettings();
 renderFeatures();
 loadSettings().then((s) => { settings = s; renderFeatures(); });
+
+// Offline beküldött visszajelzések feltöltése
+flushFeedback();
+
+// Admin: új visszajelzések száma a csempén
+if (session.isAdmin) {
+    (async () => {
+        try {
+            const { db, collection, getDocs, query, where } = await import('./firebase.js');
+            const snap = await getDocs(query(collection(db, 'feedback'), where('status', '==', 'new')));
+            const n = snap.docs.filter((d) => d.data().status === 'new').length;
+            const tile = document.querySelector('.dashboard-tile[data-id="feedback"]');
+            if (n && tile) tile.insertAdjacentHTML('beforeend', `<span class="tile-badge">${n}</span>`);
+        } catch { /* offline – nem kritikus */ }
+    })();
+}

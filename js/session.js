@@ -100,7 +100,7 @@ const screenForStatus = (d) => {
         return screenMessage('🔗', 'Összekapcsolás folyamatban', 'Kérem, várjon.');
     }
     if (d.status === 'disabled') {
-        return screenMessage('⛔', 'Fiók letiltva', 'A fiókodat egy vezető letiltotta. Kérdés esetén keresd a csoportvezetődet.');
+        return screenMessage('⛔', 'Fiók letiltva', 'A fiókod le van tiltva, ezért a Qube nem használható.');
     }
     if (d.status === 'merged') {
         return screenMessage('📱', 'Fiók áthelyezve', 'Ez a fiók egy másik eszközre lett áthelyezve. Ezen a telefonon már nem használható.');
@@ -227,7 +227,7 @@ const verify = async (cached, onActive) => {
             screenMessage('📡', 'Nincs kapcsolat', 'Az első indításhoz internetkapcsolat szükséges. Csatlakozz, majd próbáld újra.', retryBtn + hint);
         } else {
             // Beállítási hiba (pl. hiányzó Firebase config, kikapcsolt névtelen belépés)
-            screenMessage('⚙️', 'Beállítási hiba', 'Az alkalmazás nem tud csatlakozni a szerverhez. Szólj az adminnak.', retryBtn + hint);
+            screenMessage('⚙️', 'Beállítási hiba', 'Az alkalmazás most nem tud csatlakozni a szerverhez. Próbáld újra egy kicsit később.', retryBtn + hint);
         }
         return;
     }

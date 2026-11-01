@@ -14,6 +14,7 @@ import {
 } from './firebase.js';
 import { IC } from './config.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
+import { registerHelp } from './help.js';
 
 const session = await ready;
 const canManage = session.can('ic.manage');
@@ -490,3 +491,6 @@ setPageTabs([
     canManage && { id: 'list', icon: '🗂️', label: 'Lista' },
     canStats && { id: 'stats', icon: '📊', label: 'Statisztika' }
 ].filter(Boolean), showTab);
+
+// ❓ Súgó az alsó menüben
+registerHelp('ic');

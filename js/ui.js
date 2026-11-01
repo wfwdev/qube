@@ -164,7 +164,7 @@ export const openSideMenu = () => {
             <input type="text" id="profileName" class="form-control" maxlength="60" value="${esc(u.name)}">
             <button class="btn btn-light px-3" id="profileSave">✓</button>
         </div>
-        <div class="text-muted tiny mb-4">A törzsszámot csak vezető módosíthatja.</div>
+        <div class="text-muted tiny mb-4">A törzsszámot csak az adminisztrátor módosíthatja.</div>
 
         <h6 class="section-title">⚙️ Beállítások</h6>
         ${switchRow('settingAudio', 'Hangjelzés', 'Csippanás sikeres műveletnél')}
@@ -172,6 +172,7 @@ export const openSideMenu = () => {
         ${switchRow('settingFlash', 'Képernyő villanás', 'Vizuális visszajelzés')}
         ${switchRow('settingWakeLock', 'Ébrentartás', 'A kijelző nem alszik el')}
 
+        <a class="btn btn-light w-100 mt-3" href="feedback.html">💬 Hiba vagy ötlet beküldése</a>
         <div class="text-center text-muted tiny mt-4 pb-5">${esc(APP.name)} v${esc(APP.version)} · ${esc(APP.build)}</div>`;
 
     const defaults = { settingAudio: true, settingVibrate: true, settingFlash: true, settingWakeLock: false };
@@ -210,6 +211,7 @@ export const closeSideMenu = () => {
 // Alap: Kezdőlap · Felhasználók (ha joga van) · Profil
 // Egy oldal saját füleket tehet bele (setPageTabs) → Kezdőlap · fülek · Profil
 let pageTabs = null;     // [{ id, icon, label }]
+let helpAction = null;   // ha be van állítva: ❓ Súgó gomb a jobb szélen
 let activeTab = null;
 let onTabSelect = null;
 
@@ -225,6 +227,7 @@ const renderNav = () => {
         ? [home, ...pageTabs.map((t) => ({ ...t, tab: true }))]
         : [home, sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' }, onHome && profile, onHome && info]
     ).filter(Boolean);
+    if (helpAction) items.push({ id: 'help', icon: '❓', label: 'Súgó', action: helpAction });
 
     const isActive = (i) => (i.tab ? i.id === activeTab : !pageTabs && i.id === page);
     const nav = $('#bottomNav');
@@ -257,6 +260,9 @@ export const setPageTabs = (tabs, onSelect) => {
     renderNav();
     onSelect?.(activeTab);
 };
+
+// Modul súgó gomb az alsó menü jobb szélén (lásd js/help.js)
+export const setHelp = (fn) => { helpAction = fn; renderNav(); };
 
 export const renderChrome = (session) => {
     sessionRef = session;
