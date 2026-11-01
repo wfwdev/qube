@@ -416,3 +416,30 @@ body.qr-open { overflow: hidden; }
 }
 body.dark-mode .snowflake { color: #fff; opacity: .45; }
 @keyframes snowFall { to { transform: translateY(105vh) rotate(300deg); } }
+
+/* Adventi ikon a név mellett + középre felugró üzenet */
+.greet-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.greet-icon {
+    position: relative; flex: none; width: 52px; height: 52px; border: 0; border-radius: 16px; font-size: 1.7rem;
+    background: linear-gradient(135deg, #c92a2a, #1f7a3f); box-shadow: 0 4px 14px rgba(201, 42, 42, .3);
+}
+.greet-icon:active { transform: scale(.94); }
+.greet-icon .advent-dot { top: -3px; right: -3px; }
+.greet-icon.teaser { animation: teaserBounce 3s ease-in-out infinite; }
+@keyframes teaserBounce { 0%, 70%, 100% { transform: translateY(0) rotate(0); } 78% { transform: translateY(-5px) rotate(-6deg); } 86% { transform: translateY(0) rotate(5deg); } 92% { transform: rotate(-3deg); } }
+
+.advent-pop {
+    position: fixed; inset: 0; z-index: 2600; display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(0, 0, 0, .55); animation: popFade .2s ease-out;
+}
+.advent-pop.closing { opacity: 0; transition: opacity .18s; }
+.advent-pop-card {
+    width: 100%; max-width: 340px; padding: 28px 22px 22px; border-radius: 22px; text-align: center;
+    background: var(--sur); color: var(--tx); box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    border-top: 6px solid #c92a2a; animation: popIn .35s cubic-bezier(.2, 1.4, .4, 1);
+}
+.advent-pop-emoji { font-size: 3.2rem; line-height: 1; margin-bottom: 8px; }
+.advent-pop-title { font-size: .8rem; font-weight: 800; color: #c92a2a; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+.advent-pop-body { font-size: 1.15rem; font-weight: 600; line-height: 1.45; }
+@keyframes popFade { from { opacity: 0; } }
+@keyframes popIn { from { transform: scale(.7); opacity: 0; } }
