@@ -21,6 +21,7 @@ const APP_SHELL = [
     './pack.html',
     './info.html',
     './settings.html',
+    './feedback.html',
     './olvaso-teszt.html',
     './style.css',
     './manifest.json',
@@ -43,7 +44,10 @@ const APP_SHELL = [
     './js/info.js',
     './js/settings.js',
     './js/features.js',
-    './js/advent.js'
+    './js/advent.js',
+    './js/help.js',
+    './js/feedback.js',
+    './js/feedback-store.js'
 ];
 
 // Külső könyvtárak előre letöltve (offline használathoz) – ha nem sikerül, nem akadályozza a telepítést

@@ -159,6 +159,28 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ============================================================
+    // VISSZAJELZÉSEK (hiba / ötlet) – a beküldő a sajátját látja, az admin mindet
+    // ============================================================
+    match /feedback/{id} {
+      allow create: if active()
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'empId', 'type', 'module', 'text', 'status', 'createdAt', 'clientTime', 'version', 'device'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.type in ['bug', 'idea']
+        && request.resource.data.module is string && request.resource.data.module.size() <= 40
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 5 && request.resource.data.text.size() <= 2000
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      // saját: get (újraküldés-ellenőrzés) és lista (where uid == saját)
+      allow get: if signedIn() && (resource == null || resource.data.uid == request.auth.uid || isAdmin());
+      allow list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reply', 'updatedAt'])
+        && request.resource.data.status in ['new', 'progress', 'done', 'rejected'];
+      allow delete: if isAdmin();
+    }
+
     // ---------- Modulok (következő lépésekben) ----------
     // MES terminál, csomagoló kód
   }

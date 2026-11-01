@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.6.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
+**Állapot:** v2.7.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
 
 ## Felépítés
 
@@ -31,6 +31,9 @@ info.html, js/info.js Felhasználói tudnivalók (belépés nélkül is elérhet
 settings.html, js/settings.js  Admin beállítások (funkciók ki/be)
 js/features.js      Beállítások betöltése/mentése (Firestore: settings/app)
 js/advent.js        Adventi naptár és hóesés
+js/help.js          Modul súgók (❓ Súgó gomb az alsó menüben) – új modulnál ide kerül a leírás
+feedback.html, js/feedback.js  Visszajelzés: hiba / ötlet beküldése, saját bejelentések, admin kezelés
+js/feedback-store.js  Visszajelzés beküldése helyi sorral (offline is)
 ```
 
 ## IC generátor
@@ -90,6 +93,11 @@ Az `admin` szerepkör mindig mindent elér.
 
 - Egy számkód, **csak a telefonon** tárolva (Qube-fiókonként külön).
 - A QR pontosan a számot tartalmazza (nincs utána TAB / ENTER / F4). Az eltűnési idő egyénileg állítható.
+
+## Súgó és visszajelzés
+
+- **Modul súgó:** minden modul alsó menüjében ❓ Súgó. Új modulnál: új bejegyzés a `js/help.js` `HELP` objektumába, és a modul JS-ében `registerHelp('modul-id')`.
+- **Visszajelzés:** mindenki beküldhet hibát vagy ötletet (kezdőlap csempe, Profil menü, modul súgó). Offline is: helyi sorba kerül, net esetén felmegy. A beküldő a **Sajátjaim** fülön látja az állapotot és a választ; az admin a **Beérkezett** fülön kezeli (állapot: Új / Folyamatban / Kész / Elutasítva, válasz, törlés). Firestore: `feedback`.
 
 ## Beállítások (csak admin)
 
