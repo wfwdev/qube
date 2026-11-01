@@ -341,6 +341,10 @@ onSnapshot(collection(db, 'roles'), (snap) => {
 }, (e) => fail(e, 'A szerepkörök nem tölthetők be.'));
 
 onSnapshot(collection(db, 'users'), (snap) => {
+    if (snap.metadata?.fromCache && snap.empty) {
+        $('#userList').innerHTML = '<div class="text-center text-muted small py-4">📡 A felhasználók listájához internetkapcsolat kell.</div>';
+        return;
+    }
     users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderUsers();
     if (isAdmin) renderRoles();

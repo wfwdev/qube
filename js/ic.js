@@ -62,8 +62,10 @@ let listArea = 'all';
 const sortList = (l) => l.sort((a, b) => a.area.localeCompare(b.area) || a.code.localeCompare(b.code));
 
 onSnapshot(collection(db, 'ic_numbers'), (snap) => {
+    // Offline üres válasz: marad a telefonon tárolt lista (nem írjuk felül üresre)
+    if (snap.metadata?.fromCache && snap.empty) return;
     icList = sortList(snap.docs.map((d) => ({ code: d.id, area: d.data().area })));
-    store(LIST_CACHE, icList);
+    if (!snap.metadata?.fromCache) store(LIST_CACHE, icList);
     renderGenSelect();
 renderLastGen();
 
@@ -433,6 +435,10 @@ function loadStats() {
     const id = statMode === 'm' ? `m_${monthKey(statDate)}` : `d_${dayKey(statDate)}`;
     $('#statByIc').innerHTML = '<div class="text-muted small">Betöltés…</div>';
     statUnsub = onSnapshot(doc(db, 'ic_stats', id), (snap) => {
+        if (!snap.exists() && snap.metadata?.fromCache) {
+            $('#statByIc').innerHTML = '<div class="text-muted small">📡 A statisztikához internetkapcsolat kell.</div>';
+            return;
+        }
         const s = snap.exists() ? snap.data() : { count: 0, amount: 0, byIc: {} };
         $('#statCount').textContent = fmtNum(s.count);
         $('#statAmount').textContent = fmtNum(s.amount);

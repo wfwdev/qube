@@ -234,7 +234,7 @@ const verify = async (cached, onActive) => {
 
     const uid = fbUser.uid;
     const userRef = doc(db, 'users', uid);
-    if (cached && cached.uid !== uid) clearCache(); // másik fiók → régi cache érvénytelen
+    if (cached && cached.uid !== uid) { clearCache(); cached = null; } // másik fiók → régi cache érvénytelen
 
     let onboardingShown = false;
     let checking = false;
@@ -244,6 +244,16 @@ const verify = async (cached, onActive) => {
     let lastRole = null;
 
     onSnapshot(userRef, async (snap) => {
+        // Offline: a Firebase "nincs a gyorsítótárban" jelzést küld – ez NEM azt jelenti,
+        // hogy a fiók nem létezik. Ilyenkor a mentett munkamenettel megy tovább az app.
+        if (!snap.exists() && snap.metadata?.fromCache) {
+            if (!cached) {
+                screenMessage('📡', 'Nincs internetkapcsolat',
+                    'Az első belépéshez internet kell. Utána a Qube internet nélkül is használható.',
+                    retryBtn);
+            }
+            return;
+        }
         if (!snap.exists()) {
             clearCache();
             if (!onboardingShown) { onboardingShown = true; screenOnboarding(uid); }
