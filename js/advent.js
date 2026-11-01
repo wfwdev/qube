@@ -9,6 +9,34 @@ import { esc, $, feedback, toast, openSheet } from './ui.js';
 // Névelő a sorszám elé (1–31 között: "az 1.", "az 5.", minden más "a")
 export const az = (n) => ([1, 5].includes(Number(n)) ? 'az' : 'a');
 
+// November 15–30.: előzetes ("készül valami")
+export const adventTeaser = (d = new Date()) => d.getMonth() === 10 && d.getDate() >= 15;
+
+// Hány nap van még december 1-ig
+export const daysUntilAdvent = (d = new Date()) => {
+    const start = new Date(d.getFullYear(), 11, 1);
+    const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return Math.max(0, Math.round((start - today) / 86400000));
+};
+
+// ---------- Felugró kártya a képernyő közepén ----------
+export const showPop = ({ emoji = '🎁', title = '', body = '', button = 'Szuper!' }) => {
+    document.querySelector('.advent-pop')?.remove();
+    const el = document.createElement('div');
+    el.className = 'advent-pop';
+    el.innerHTML = `
+        <div class="advent-pop-card" role="dialog" aria-modal="true">
+            <div class="advent-pop-emoji">${emoji}</div>
+            ${title ? `<div class="advent-pop-title">${esc(title)}</div>` : ''}
+            <div class="advent-pop-body">${esc(body)}</div>
+            <button class="btn btn-primary w-100 mt-3">${esc(button)}</button>
+        </div>`;
+    const close = () => { el.classList.add('closing'); setTimeout(() => el.remove(), 180); };
+    el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('button')) close(); });
+    document.body.appendChild(el);
+    return el;
+};
+
 // Hányadik ablakig nyitható ma? (0 = ma nem aktív a naptár)
 export const adventDay = (d = new Date()) => {
     if (d.getMonth() !== 11) return 0;          // csak decemberben
@@ -31,17 +59,16 @@ export const openAdvent = ({ day, messages, key, preview = false }) => {
             <div class="text-muted small">${preview ? `Előnézet – ${day}. nap` : christmas ? 'Boldog karácsonyt! Minden ablak kinyitható.' : 'Minden nap egy újabb ablak!'}</div>
         </div>
         <div class="advent-grid" id="advGrid"></div>
-        <div class="advent-msg hidden" id="advMsg"></div>
         <button class="btn btn-light w-100 mt-3" id="advClose">Bezárás</button>`);
 
     const grid = $('#advGrid', sheet);
-    const msgBox = $('#advMsg', sheet);
 
-    const show = (i) => {
-        msgBox.innerHTML = `<div class="advent-msg-day">${i}. nap</div><div>${esc(messages[i - 1])}</div>`;
-        msgBox.classList.remove('hidden');
-        msgBox.classList.remove('pop'); void msgBox.offsetWidth; msgBox.classList.add('pop');
-    };
+    const show = (i, fresh) => showPop({
+        emoji: fresh ? '🎁' : '🎄',
+        title: `December ${i}.`,
+        body: messages[i - 1],
+        button: fresh ? 'Szuper!' : 'Bezárás'
+    });
 
     const render = () => {
         grid.innerHTML = Array.from({ length: 24 }, (_, k) => {
@@ -59,17 +86,17 @@ export const openAdvent = ({ day, messages, key, preview = false }) => {
         const i = Number(b.dataset.day);
         if (i > day) { feedback('error'); return toast('Ezt még nem nyithatod ki! 🛑'); }
         feedback('success');
-        if (!opened.includes(i)) {
+        const fresh = !opened.includes(i);
+        if (fresh) {
             opened = [...opened, i];
             saveOpened(key, opened);
             render();
         }
-        show(i);
+        show(i, fresh);
     });
 
     $('#advClose', sheet).addEventListener('click', () => sheet.closest('.overlay')?.classList.remove('open'));
     render();
-    if (opened.includes(day)) show(day);
 };
 
 // ---------- Hóesés ----------

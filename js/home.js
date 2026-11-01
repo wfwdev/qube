@@ -5,7 +5,7 @@ import { ready } from './session.js';
 import { MODULES } from './config.js';
 import { esc, $, feedback, toast } from './ui.js';
 import { cachedSettings, loadSettings } from './features.js';
-import { adventDay, openAdvent, openedKey, startSnow, az } from './advent.js';
+import { adventDay, adventTeaser, daysUntilAdvent, openAdvent, openedKey, showPop, startSnow, az } from './advent.js';
 
 const session = await ready;
 
@@ -57,13 +57,38 @@ let settings = null;
 
 const renderFeatures = () => {
     const box = $('#features');
+    const icon = $('#greetIcon');
     const day = adventDay();
+    const teaser = adventTeaser();
     const a = settings?.advent;
-    if (!a?.enabled || !day) { box.innerHTML = ''; return; }
+    if (!a?.enabled || (!day && !teaser)) { box.innerHTML = ''; icon.innerHTML = ''; return; }
 
+    // November 15–30.: csak az ikon a név mellett – "készül valami"
+    if (teaser) {
+        box.innerHTML = '';
+        const n = daysUntilAdvent();
+        icon.innerHTML = '<button class="greet-icon teaser" id="adventIcon" aria-label="Meglepetés">🎄</button>';
+        $('#adventIcon').addEventListener('click', () => {
+            feedback();
+            showPop({
+                emoji: '🎁',
+                title: 'Valami készül…',
+                body: `December 1-jén kinyílik a Qube adventi naptára! Minden nap egy új ablak vár rád. Még ${n} nap!`,
+                button: 'Várom!'
+            });
+        });
+        return;
+    }
+
+    // December: ikon a név mellett + kártya
     const opened = (() => { try { return JSON.parse(localStorage.getItem(openedKey(session.uid))) || []; } catch { return []; } })();
     const todayDone = opened.includes(day);
     const xmas = new Date().getDate() >= 25;
+    const open = () => { feedback(); openAdvent({ day, messages: a.messages, key: openedKey(session.uid) }); };
+
+    icon.innerHTML = `<button class="greet-icon" id="adventIcon" aria-label="Adventi naptár">🎄${!todayDone && !xmas ? '<span class="advent-dot"></span>' : ''}</button>`;
+    $('#adventIcon').addEventListener('click', open);
+
     box.innerHTML = `
         <button class="advent-card" id="adventCard">
             <span class="advent-card-ico">🎄</span>
@@ -73,10 +98,7 @@ const renderFeatures = () => {
             </span>
             ${!todayDone && !xmas ? '<span class="advent-dot"></span>' : ''}
         </button>`;
-    $('#adventCard').addEventListener('click', () => {
-        feedback();
-        openAdvent({ day, messages: a.messages, key: openedKey(session.uid) });
-    });
+    $('#adventCard').addEventListener('click', open);
     if (a.snow) startSnow();
 };
 

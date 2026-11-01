@@ -4,7 +4,7 @@
 // ============================================================
 import { ready } from './session.js';
 import { loadSettings, saveAdvent, DEFAULT_ADVENT_MESSAGES } from './features.js';
-import { openAdvent, adventDay, az } from './advent.js';
+import { openAdvent, adventDay, adventTeaser, az } from './advent.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
 
 await ready;
@@ -21,7 +21,9 @@ const renderStatus = () => {
     const day = adventDay();
     $('#advStatus').textContent = !advent.enabled
         ? 'Kikapcsolva – a felhasználók nem látják.'
-        : day ? `Most aktív: ${az(day)} ${day}. ablakig lehet nyitni.` : 'Bekapcsolva – december 1-jén jelenik meg a felhasználóknál.';
+        : day ? `Most aktív: ${az(day)} ${day}. ablakig lehet nyitni.`
+        : adventTeaser() ? 'Előzetes: a felhasználók már látják a 🎄 ikont a nevük mellett. December 1-jén nyílik.'
+        : 'Bekapcsolva – november 15-től egy 🎄 ikon jelzi a felhasználóknak, december 1-jén nyílik.';
 };
 
 // Mentés; hiba esetén visszaállítja az előző állapotot
