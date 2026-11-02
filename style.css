@@ -473,10 +473,7 @@ body.dark-mode .snowflake { color: #fff; opacity: .45; }
 /* ---------- 16. Fejléc: logó + hamburger menü ---------- */
 .navbar-brand-row { display: flex; align-items: center; gap: 10px; min-width: 0; color: #fff; text-decoration: none; }
 .navbar-brand-row:active { opacity: .85; }
-.navbar-logo {
-    flex: none; width: 34px; height: 34px; border-radius: 9px;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, .55), 0 2px 8px rgba(0, 0, 0, .18);
-}
+.navbar-logo { flex: none; width: 34px; height: 34px; }
 .navbar-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .hamburger {
