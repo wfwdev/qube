@@ -13,6 +13,7 @@
     --accent: #9d29b2;
     --orange: #ff5f00;
     --brand-grad: linear-gradient(135deg, #ff5f00, #9d29b2);
+    --nav-tint: #ce4459;   /* a színátmenet közepe – ehhez igazodik az iPhone állapotsor-sávja */
     --nav-h: 64px;
     --bottom-h: 72px;
 }
@@ -52,8 +53,18 @@ body.dark-mode h4, body.dark-mode h5, body.dark-mode h6 { color: var(--tx); }
     display: flex; align-items: center; justify-content: space-between;
     min-height: calc(var(--nav-h) + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) 12px 0;
-    background: var(--brand-grad);
+    /* iPhone: az állapotsor (óra, akku) alatti sávot a rendszer egy elmosódó átmenettel
+       rajzolja, az oldal színéből. Egyszínű alap + egyszínű felső sáv → az átmenet a
+       fejléc saját színébe olvad, nem fehérbe. */
+    background-color: var(--nav-tint);
+    background-image:
+        linear-gradient(to bottom, var(--nav-tint) 0, var(--nav-tint) env(safe-area-inset-top), rgba(206, 68, 89, 0) calc(env(safe-area-inset-top) * 1.5)),
+        var(--brand-grad);
     border-radius: 0 0 16px 16px;
+}
+/* Felfelé túlhúzáskor (rugózás) se villanjon ki fehér a fejléc fölött */
+.app-navbar::before {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 120px; background: var(--nav-tint);
 }
 .navbar-title { font-weight: 700; font-size: 1.3rem; color: #fff; letter-spacing: .3px; }
 .nav-btn {
