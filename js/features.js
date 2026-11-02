@@ -42,6 +42,11 @@ export const DEFAULT_SETTINGS = {
     }
 };
 
+// Firestore-ban listaként tárolva ([{ date, type }]) – merge mentéskor a lista egészében cserélődik
+const cleanSwaps = (list) => Object.fromEntries((Array.isArray(list) ? list : [])
+    .filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x?.date) && ['work', 'rest', 'none'].includes(x?.type))
+    .map((x) => [x.date, x.type]));
+
 const merge = (data) => {
     const a = data?.advent || {};
     const msgs = Array.isArray(a.messages) ? a.messages : [];
@@ -51,8 +56,16 @@ const merge = (data) => {
             snow: a.snow !== false,
             // hiányzó / üres napokra az alapértelmezett üzenet
             messages: DEFAULT_ADVENT_MESSAGES.map((m, i) => (typeof msgs[i] === 'string' && msgs[i].trim()) ? msgs[i] : m)
-        }
+        },
+        // Munkanap-áthelyezések admin kiegészítése: 'work' | 'rest' | 'none' (beépített törlése)
+        calendar: { swaps: cleanSwaps(data?.calendar?.swapList) }
     };
+};
+
+// Admin: munkanap-áthelyezések mentése (a teljes admin lista)
+export const saveSwaps = async (swaps) => {
+    const swapList = Object.entries(swaps).map(([date, type]) => ({ date, type }));
+    await setDoc(doc(db, 'settings', 'app'), { calendar: { swapList: Object.keys(cleanSwaps(swapList)).map((d) => ({ date: d, type: swaps[d] })) } }, { merge: true });
 };
 
 const readCache = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { return null; } };

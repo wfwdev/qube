@@ -3,13 +3,17 @@
 // A Firestore szabály is csak adminnak engedi a settings írását.
 // ============================================================
 import { ready } from './session.js';
-import { loadSettings, saveAdvent, DEFAULT_ADVENT_MESSAGES } from './features.js';
+import { loadSettings, saveAdvent, saveSwaps, DEFAULT_ADVENT_MESSAGES } from './features.js';
+import { BUILTIN_SWAPS, parseIso, fmtLong, dow } from './hu-calendar.js';
 import { openAdvent, adventDay, adventTeaser, az } from './advent.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
+import { countCodes, regenerateCodes } from './recovery.js';
 
-await ready;
+const session = await ready;
 
-let advent = (await loadSettings()).advent;
+const initial = await loadSettings();
+let advent = initial.advent;
+let adminSwaps = { ...initial.calendar.swaps };  // admin kiegészítés: work | rest | none
 
 const fail = (e) => { console.error(e); feedback('error'); toast('Nem sikerült menteni.', 'error'); };
 
@@ -98,3 +102,108 @@ $('#advMsgs').addEventListener('click', (e) => {
 setPageTabs([{ id: 'settings', icon: '⚙️', label: 'Beállítások' }], () => {});
 renderStatus();
 renderMsgs();
+
+// ============================================================
+// ADMIN VÉSZKIJÁRAT – egyszer használatos kódok
+// ============================================================
+const renderRecCount = async () => {
+    try {
+        const n = await countCodes(session.user.empId);
+        $('#recCount').textContent = n;
+        $('#recCount').classList.toggle('text-danger', n === 0);
+    } catch { $('#recCount').textContent = '–'; }
+};
+
+$('#recGen').addEventListener('click', async (e) => {
+    const n = Number($('#recCount').textContent) || 0;
+    if (n && !confirm(`Még ${n} fel nem használt kódod van. Újakat generálsz? A régiek érvénytelenné válnak.`)) return;
+    const btn = e.currentTarget;
+    btn.disabled = true; btn.textContent = 'Generálás…';
+    try {
+        const codes = await regenerateCodes(session.user.empId);
+        feedback('success');
+        const sheet = openSheet(`
+            <h5 class="fw-bold mb-1">🔑 Az új vészkódjaid</h5>
+            <div class="info-warn mb-3">Ezek <b>csak most</b> láthatók! Írd fel vagy mentsd el biztonságos helyre (pl. jelszókezelő). Mindegyik egyszer használható.</div>
+            <div class="rec-codes mono" id="recCodes">${codes.map((c) => `<div>${esc(c)}</div>`).join('')}</div>
+            <button class="btn btn-light w-100 mt-3" id="recCopy">📋 Másolás</button>
+            <button class="btn btn-primary w-100 mt-2" id="recDone">Felírtam, bezárom</button>`);
+        $('#recCopy', sheet).addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(codes.join('\n')); toast('Kimásolva ✓', 'success'); }
+            catch { toast('Nem sikerült – írd fel kézzel.', 'error'); }
+        });
+        $('#recDone', sheet).addEventListener('click', closeSheet);
+    } catch (err) {
+        console.error(err); feedback('error'); toast('Nem sikerült a generálás.', 'error');
+    } finally {
+        btn.disabled = false; btn.textContent = 'Új vészkódok generálása';
+        renderRecCount();
+    }
+});
+renderRecCount();
+
+// ============================================================
+// MUNKANAP-ÁTHELYEZÉSEK (munkaidő naptár)
+// beépített (rendelet a kódban) + admin lista; 'none' = beépített elrejtése
+// ============================================================
+let swapType = 'work';
+
+const renderSwaps = () => {
+    const all = { ...BUILTIN_SWAPS, ...adminSwaps };
+    const thisYear = new Date().getFullYear();
+    const rows = Object.keys(all).filter((d) => Number(d.slice(0, 4)) >= thisYear - 1).sort();
+    $('#swapList').innerHTML = rows.length ? rows.map((d) => {
+        const t = all[d];
+        const builtin = d in BUILTIN_SWAPS;
+        const hidden = t === 'none';
+        return `<div class="swap-row ${hidden ? 'opacity-50' : ''}">
+            <div class="flex-grow-1">
+                <div class="fw-bold small">${esc(fmtLong(parseIso(d)))}</div>
+                <div class="text-muted tiny">${builtin ? 'Beépített (rendelet)' : 'Admin által felvett'}${hidden ? ' · kikapcsolva' : ''}</div>
+            </div>
+            ${hidden ? '' : `<span class="swap-tag ${t}">${t === 'work' ? 'Ledolgozós' : 'Pihenőnap'}</span>`}
+            <button class="btn btn-sm btn-light" data-swap="${d}">${hidden ? 'Vissza' : '✕'}</button>
+        </div>`;
+    }).join('') : '<div class="text-muted small">Nincs áthelyezés.</div>';
+};
+
+const storeSwaps = async (next, msg) => {
+    const prev = adminSwaps;
+    adminSwaps = next;
+    renderSwaps();
+    try { await saveSwaps(adminSwaps); feedback('success'); toast(msg, 'success'); }
+    catch (e) { fail(e); adminSwaps = prev; renderSwaps(); }
+};
+
+$('#swapType').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-t]');
+    if (!b) return;
+    feedback();
+    swapType = b.dataset.t;
+    $('#swapType').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+});
+
+$('#swapAdd').addEventListener('click', () => {
+    const d = $('#swapDate').value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { feedback('error'); return toast('Válassz dátumot.', 'error'); }
+    const wd = dow(parseIso(d));
+    if (swapType === 'work' && wd < 5 && !confirm('Ez hétköznap. Biztosan ledolgozós napnak jelölöd?')) return;
+    if (swapType === 'rest' && wd >= 5 && !confirm('Ez hétvégére esik. Biztosan pihenőnapnak jelölöd?')) return;
+    const next = { ...adminSwaps };
+    if (BUILTIN_SWAPS[d] === swapType) delete next[d]; else next[d] = swapType;
+    $('#swapDate').value = '';
+    storeSwaps(next, 'Áthelyezés felvéve ✓');
+});
+
+$('#swapList').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-swap]');
+    if (!b) return;
+    feedback();
+    const d = b.dataset.swap;
+    const next = { ...adminSwaps };
+    if (d in BUILTIN_SWAPS) {
+        if (next[d] === 'none') delete next[d]; else next[d] = 'none';
+    } else delete next[d];
+    storeSwaps(next, 'Mentve ✓');
+});
+renderSwaps();

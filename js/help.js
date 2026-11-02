@@ -68,6 +68,25 @@ const HELP = {
                 <li>A kód a <b>Kód módosítása</b> gombbal cserélhető vagy törölhető.</li>
             </ul>`
     },
+    calendar: {
+        title: '📅 Munkaidő naptár',
+        html: `
+            <h6>Naptár</h6>
+            <ul>
+                <li><b>Piros</b>: munkaszüneti nap (ünnep), <b>sárga „M”</b>: ledolgozós szombat, <b>szaggatott</b>: áthelyezett pihenőnap.</li>
+                <li>A bal oldali oszlopban a heti műszakod látszik (<b>DE</b> / <b>DU</b> / <b>É</b>), ha beállítottad.</li>
+                <li>A kék szám a nap sarkában: ennyi kolléga van aznap szabadságon.</li>
+                <li>Lapozni a nyilakkal vagy oldalra húzással lehet; a hónap nevére koppintva visszaugrik a mai naphoz.</li>
+            </ul>
+            <h6>Szabadság bejelölése</h6>
+            <p>Koppints egy munkanapra → <b>Szabadságon leszek ezen a napon</b>. Ugyanígy törölhető. Nincs jóváhagyás, csak tájékoztató jellegű – <b>mindenki látja</b>, ki mikor van szabadságon. Bejelöléshez internet kell.</p>
+            <h6>Szabadságkeret</h6>
+            <p>A <b>Szabadság</b> fülön add meg az éves keretedet – a számláló mutatja, mennyi maradt. Csak a munkanapra eső napok számítanak. A keretet csak te látod.</p>
+            <h6>Műszakom</h6>
+            <p>Állítsd be, hogy 3 műszakban vagy nappalosként dolgozol, és melyik műszakban vagy <b>ezen a héten</b>. A forgás sorrendjét is megadhatod. Ez csak ezen a telefonon tárolódik.</p>
+            <h6>Jó tudni</h6>
+            <p>Az ünnepnapokat az app magától számolja (a húsvéthoz kötötteket is). A naptár internet nélkül is megnézhető.</p>`
+    },
     admin: {
         title: '👥 Felhasználók',
         html: `
