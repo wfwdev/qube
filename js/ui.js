@@ -23,7 +23,8 @@ const applyTheme = () => {
     const m = themeMode();
     const dark = m === 'dark' || (m === 'auto' && systemDark.matches);
     document.body.classList.toggle('dark-mode', dark);
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#9d29b2' : '#ff5f00');
+    // A fejléc mindkét módban ugyanaz → a böngésző sávja is mindig a fejléc színe
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#ce4459');
 };
 const setThemeMode = (m) => {
     if (m === 'auto') localStorage.removeItem('theme'); else localStorage.setItem('theme', m);
