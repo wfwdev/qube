@@ -117,7 +117,7 @@ const injectShell = () => {
     <div id="flashOverlay"></div>
     <nav class="app-navbar">
         <a class="navbar-brand-row" href="index.html" aria-label="Kezdőlap">
-            <img class="navbar-logo" src="icons/icon.svg" alt="" width="34" height="34">
+            <img class="navbar-logo" src="icons/logo.svg" alt="" width="34" height="34">
             <span class="navbar-title">${esc(title)}</span>
         </a>
         <div class="d-flex align-items-center gap-2">
@@ -190,7 +190,6 @@ export const openSideMenu = () => {
         ${switchRow('settingWakeLock', 'Ébrentartás', 'A kijelző nem alszik el')}
 
         <div class="menu-links mt-3">
-            <a href="info.html">ℹ️ Infó és súgó</a>
             <a href="feedback.html">💬 Hiba vagy ötlet beküldése</a>
         </div>
         <div class="text-center text-muted tiny mt-4 pb-5">${esc(APP.name)} v${esc(APP.version)} · ${esc(APP.build)}</div>`;
@@ -229,6 +228,7 @@ export const openSideMenu = () => {
         }
     });
 
+    clearTimeout(menuCloseTimer);
     menu.classList.add('open');
     $('#sideOverlay').classList.add('open');
     document.body.classList.add('menu-open');
@@ -236,10 +236,15 @@ export const openSideMenu = () => {
     $('#menuBtn').setAttribute('aria-expanded', 'true');
 };
 
+let menuCloseTimer = null;
 export const closeSideMenu = () => {
     $('#sideMenu')?.classList.remove('open');
     $('#sideOverlay')?.classList.remove('open');
-    document.body.classList.remove('menu-open');
+    // A fejléc a menü kicsúszásáig maradjon felül – különben a menü fehér teteje átvillan rajta
+    clearTimeout(menuCloseTimer);
+    menuCloseTimer = setTimeout(() => {
+        if (!$('#sideMenu')?.classList.contains('open')) document.body.classList.remove('menu-open');
+    }, 380);
     $('#menuBtn')?.classList.remove('open');
     $('#menuBtn')?.setAttribute('aria-expanded', 'false');
 };
