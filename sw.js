@@ -52,7 +52,8 @@ const APP_SHELL = [
     './js/feedback-store.js',
     './js/recovery.js',
     './js/calendar.js',
-    './js/hu-calendar.js'
+    './js/hu-calendar.js',
+    './js/avatar.js'
 ];
 
 // Külső könyvtárak előre letöltve (offline használathoz) – ha nem sikerül, nem akadályozza a telepítést

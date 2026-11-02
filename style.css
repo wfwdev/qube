@@ -197,6 +197,20 @@ body.screen-open .bottom-nav, body.screen-open .app-main { display: none; }
     display: flex; align-items: center; justify-content: center;
 }
 .avatar.sm { width: 38px; height: 38px; font-size: 1rem; }
+/* Profilkép (js/avatar.js): monogram a névből színezve, vagy kép */
+.avatar[data-av] { background: hsl(var(--av-h, 300) 55% 52%); overflow: hidden; letter-spacing: .5px; user-select: none; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-touch-callout: none; }
+.avatar.xs { width: 26px; height: 26px; font-size: .62rem; }
+.avatar.lg { width: 64px; height: 64px; font-size: 1.4rem; }
+.avatar-edit { position: relative; flex: none; border: 0; padding: 0; background: 0; border-radius: 50%; }
+.avatar-cam {
+    position: absolute; right: -4px; bottom: -4px; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: .8rem;
+    background: var(--sur); border: 1px solid var(--bord); box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+}
+.av-panel { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--sur2); border: 1px solid var(--bord); }
+.av-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 14px rgba(0, 0, 0, .15); }
+.name-chip.with-av { display: inline-flex; align-items: center; gap: 6px; padding-left: 3px; }
 .me-badge { font-size: .65rem; background: var(--accent); color: #fff; border-radius: 6px; padding: 2px 6px; vertical-align: middle; }
 .role-badge {
     display: inline-block; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;
@@ -578,7 +592,7 @@ body.dark-mode .cal-day.t-workSat { background: #45300f; color: #fbbf24; }
 
 .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; margin-top: 10px; font-size: .72rem; color: var(--tx2); }
 .cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
-.lg { display: inline-block; width: 12px; height: 12px; border-radius: 4px; }
+.lgd { display: inline-block; width: 12px; height: 12px; border-radius: 4px; }
 .lg-holiday { background: #fde2e4; border: 1px solid #c0263d; }
 .lg-worksat { background: #fff1d6; border: 1px solid #f59e0b; }
 .lg-rest { border: 1px dashed var(--tx2); }

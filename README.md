@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.9.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
+**Állapot:** v2.10.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
 
 ## Felépítés
 
@@ -36,6 +36,7 @@ feedback.html, js/feedback.js  Visszajelzés: hiba / ötlet beküldése, saját 
 js/feedback-store.js  Visszajelzés beküldése helyi sorral (offline is)
 js/recovery.js      Admin vészkijárat (egyszer használatos vészkódok)
 calendar.html, js/calendar.js  Munkaidő naptár (ünnepek, műszak, szabadság)
+js/avatar.js        Profilképek (kicsinyítés, helyi tár, megjelenítés)
 js/hu-calendar.js   Magyar ünnepnapok, munkanap-áthelyezések, műszakforgás számítása
 ```
 
@@ -109,6 +110,14 @@ Ha az admin új eszközről „Összekapcsolás folyamatban” állapotba kerül
 - **Munkanap-áthelyezések:** a 2026-os rendelet beépítve (`js/hu-calendar.js` → `BUILTIN_SWAPS`). Új évet az admin a **Beállítások → Munkanap-áthelyezések** részen vesz fel (beépített is kikapcsolható). Firestore: `settings/app.calendar.swapList`.
 - **Műszak:** 3 műszak (DE 06–14, DU 14–22, É 22–06) heti forgással, vagy nappalos. Csak a telefonon tárolódik.
 - **Szabadság:** napra koppintva bejelölhető, jóváhagyás nincs; mindenki látja a többiekét (`leave/{uid}`). Az éves keret csak a tulajdonosé (`leaveQuota/{uid}`).
+
+## Profilképek
+
+- Feltöltés: fejléc ☰ menü → a monogramra/képre koppintva. A telefon 160×160-as JPEG-re kicsinyíti (kb. 5–15 KB), előnézet után menthető.
+- Firestore: `avatars/{uid}` (a kép base64-ben, max. 40 000 karakter) és `meta/avatars` (index: ki mikor cserélte). Oldalbetöltéskor csak az index olvasódik; egy kép csak akkor töltődik le, ha még nincs meg a telefonon (IndexedDB) vagy cserélték.
+- Szabályok: mindenki csak a sajátját írhatja, kép és index csak együtt változhat, 20 mp-enként legfeljebb egy csere, csak JPEG.
+- Admin: **Beállítások → Profilképek** (ki/be; kikapcsolva mindenhol monogram), bárki képe törölhető a **Felhasználók** oldalon.
+- Új eszközre áthelyezett fióknál a képet újra fel kell tölteni (a kép a fiókazonosítóhoz tartozik).
 
 ## Súgó és visszajelzés
 

@@ -242,6 +242,49 @@ service cloud.firestore {
         && request.resource.data.quota is map;
     }
 
+    // ============================================================
+    // PROFILKÉPEK – kicsinyített JPEG a dokumentumban + egy közös index
+    // A kép és az index csak együtt (egy batch-ben) változhat.
+    // Az admin a Beállításokban kikapcsolhatja, és bárkiét törölheti.
+    // ============================================================
+    function avatarPath(uid) { return /databases/$(database)/documents/avatars/$(uid); }
+    function avatarIndexPath() { return /databases/$(database)/documents/meta/avatars; }
+    function settingsPath() { return /databases/$(database)/documents/settings/app; }
+    function avatarsOn() {
+      return !exists(settingsPath())
+        || get(settingsPath()).data.get('avatars', {}).get('enabled', true) == true;
+    }
+
+    match /avatars/{uid} {
+      allow read: if active();
+      allow create, update: if active() && request.auth.uid == uid && avatarsOn()
+        && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
+        && request.resource.data.data is string
+        && request.resource.data.data.size() <= 40000
+        && request.resource.data.data.matches('data:image/jpeg;base64,[A-Za-z0-9+/=]+')
+        && request.resource.data.updatedAt == request.time
+        // legfeljebb 20 mp-enként egy csere
+        && (resource == null || request.time > resource.data.updatedAt + duration.value(20, 's'))
+        && getAfter(avatarIndexPath()).data[uid] == request.time;
+      allow delete: if (signedIn() && request.auth.uid == uid) || isAdmin();
+    }
+
+    match /meta/avatars {
+      allow read: if active();
+      // Saját kulcs: beállítás a kép feltöltésével együtt, vagy törlés a kép törlésével együtt
+      allow create: if active()
+        && request.resource.data.keys().hasOnly([request.auth.uid])
+        && request.resource.data[request.auth.uid] == request.time
+        && getAfter(avatarPath(request.auth.uid)).data.updatedAt == request.time;
+      allow update: if isAdmin()
+        || (active()
+          && changed().hasOnly([request.auth.uid])
+          && (request.auth.uid in request.resource.data
+              ? (request.resource.data[request.auth.uid] == request.time
+                 && getAfter(avatarPath(request.auth.uid)).data.updatedAt == request.time)
+              : !existsAfter(avatarPath(request.auth.uid))));
+    }
+
     // ---------- Modulok (következő lépésekben) ----------
     // MES terminál, csomagoló kód
   }
