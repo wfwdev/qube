@@ -28,6 +28,8 @@ body.dark-mode {
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
+/* Dupla koppintásos nagyítás tiltása (a két ujjas nagyítás marad) */
+html, body, * { touch-action: manipulation; }
 body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
