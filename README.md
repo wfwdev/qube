@@ -97,7 +97,7 @@ Az `admin` szerepkör mindig mindent elér.
 ## Súgó és visszajelzés
 
 - **Modul súgó:** minden modul alsó menüjében ❓ Súgó. Új modulnál: új bejegyzés a `js/help.js` `HELP` objektumába, és a modul JS-ében `registerHelp('modul-id')`.
-- **Visszajelzés:** mindenki beküldhet hibát vagy ötletet (kezdőlap csempe, Profil menü, modul súgó). Offline is: helyi sorba kerül, net esetén felmegy. A beküldő a **Sajátjaim** fülön látja az állapotot és a választ; az admin a **Beérkezett** fülön kezeli (állapot: Új / Folyamatban / Kész / Elutasítva, válasz, törlés). Firestore: `feedback`.
+- **Visszajelzés:** mindenki beküldhet hibát vagy ötletet (kezdőlap csempe, fejléc ☰ menü, modul súgó). Offline is: helyi sorba kerül, net esetén felmegy. A beküldő a **Sajátjaim** fülön látja az állapotot és a választ; az admin a **Beérkezett** fülön kezeli (állapot: Új / Folyamatban / Kész / Elutasítva, válasz, törlés). Firestore: `feedback`.
 
 ## Beállítások (csak admin)
 
