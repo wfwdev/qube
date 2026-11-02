@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.7.0 – alapmodul, IC generátor, MES terminál és csomagoló kód kész.
+**Állapot:** v2.9.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
 
 ## Felépítés
 
@@ -34,6 +34,9 @@ js/advent.js        Adventi naptár és hóesés
 js/help.js          Modul súgók (❓ Súgó gomb az alsó menüben) – új modulnál ide kerül a leírás
 feedback.html, js/feedback.js  Visszajelzés: hiba / ötlet beküldése, saját bejelentések, admin kezelés
 js/feedback-store.js  Visszajelzés beküldése helyi sorral (offline is)
+js/recovery.js      Admin vészkijárat (egyszer használatos vészkódok)
+calendar.html, js/calendar.js  Munkaidő naptár (ünnepek, műszak, szabadság)
+js/hu-calendar.js   Magyar ünnepnapok, munkanap-áthelyezések, műszakforgás számítása
 ```
 
 ## IC generátor
@@ -93,6 +96,19 @@ Az `admin` szerepkör mindig mindent elér.
 
 - Egy számkód, **csak a telefonon** tárolva (Qube-fiókonként külön).
 - A QR pontosan a számot tartalmazza (nincs utána TAB / ENTER / F4). Az eltűnési idő egyénileg állítható.
+
+## Admin vészkijárat
+
+Ha az admin új eszközről „Összekapcsolás folyamatban” állapotba kerül, a képernyő alján az **🔑 Admin vészkód** gombbal egy kóddal visszaveheti a fiókját (a régi eszköz fiókja „áthelyezve” lesz).
+- Kódok: **Beállítások → Admin vészkijárat → Új vészkódok generálása** (5 db, csak egyszer láthatók, mindegyik egyszer használható; új generálás a régieket érvényteleníti).
+- A szerverre csak a kódok SHA-256 lenyomata kerül (`recoveryCodes`), amit nem-admin nem olvashat; az ellenőrzést a Firestore szabályok végzik.
+
+## Munkaidő naptár
+
+- **Ünnepnapok:** a Munka törvénykönyve szerinti munkaszüneti napok, a húsvéthoz kötöttek évente kiszámolva; 2026-tól Szenteste is.
+- **Munkanap-áthelyezések:** a 2026-os rendelet beépítve (`js/hu-calendar.js` → `BUILTIN_SWAPS`). Új évet az admin a **Beállítások → Munkanap-áthelyezések** részen vesz fel (beépített is kikapcsolható). Firestore: `settings/app.calendar.swapList`.
+- **Műszak:** 3 műszak (DE 06–14, DU 14–22, É 22–06) heti forgással, vagy nappalos. Csak a telefonon tárolódik.
+- **Szabadság:** napra koppintva bejelölhető, jóváhagyás nincs; mindenki látja a többiekét (`leave/{uid}`). Az éves keret csak a tulajdonosé (`leaveQuota/{uid}`).
 
 ## Súgó és visszajelzés
 

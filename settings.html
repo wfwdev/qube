@@ -48,6 +48,32 @@
             <label class="form-label">Napi üzenetek</label>
             <div class="msg-list" id="advMsgs"></div>
         </section>
+
+        <!-- MUNKANAP-ÁTHELYEZÉSEK -->
+        <section class="minimal-card">
+            <h5 class="fw-bold mb-1">📅 Munkanap-áthelyezések</h5>
+            <p class="text-muted small mb-3">A munkaidő naptár ünnepnapjait az app magától számolja. A ledolgozós szombatokat és az áthelyezett pihenőnapokat évente rendelet adja ki – az újakat itt veheted fel.</p>
+            <div id="swapList" class="mb-3"></div>
+            <label class="form-label" for="swapDate">Új áthelyezés</label>
+            <input type="date" id="swapDate" class="form-control mb-2">
+            <div class="pill-nav mb-2" id="swapType">
+                <button data-t="work" class="active">🛠️ Ledolgozós nap</button>
+                <button data-t="rest">😌 Pihenőnap</button>
+            </div>
+            <button class="btn btn-primary w-100" id="swapAdd">Hozzáadás</button>
+        </section>
+
+        <!-- ADMIN VÉSZKIJÁRAT -->
+        <section class="minimal-card">
+            <h5 class="fw-bold mb-1">🔑 Admin vészkijárat</h5>
+            <p class="text-muted small mb-3">Ha új telefonra váltasz vagy törlődnek az app adatai, az „Összekapcsolás folyamatban” képernyőn egy vészkóddal visszaveheted az admin fiókodat. Minden kód <b>egyszer</b> használható.</p>
+            <div class="setting-row mb-3">
+                <div><div class="fw-bold small">Fel nem használt kódok</div><div class="text-muted tiny">A te törzsszámodhoz</div></div>
+                <div class="fw-bold fs-5" id="recCount">…</div>
+            </div>
+            <button class="btn btn-light w-100" id="recGen">Új vészkódok generálása</button>
+            <div class="text-muted tiny mt-2">Új kódok generálásakor a régiek érvénytelenné válnak.</div>
+        </section>
     </main>
 
     <script type="module" src="js/ui.js"></script>

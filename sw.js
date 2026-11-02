@@ -22,6 +22,7 @@ const APP_SHELL = [
     './info.html',
     './settings.html',
     './feedback.html',
+    './calendar.html',
     './olvaso-teszt.html',
     './style.css',
     './manifest.json',
@@ -48,7 +49,10 @@ const APP_SHELL = [
     './js/advent.js',
     './js/help.js',
     './js/feedback.js',
-    './js/feedback-store.js'
+    './js/feedback-store.js',
+    './js/recovery.js',
+    './js/calendar.js',
+    './js/hu-calendar.js'
 ];
 
 // Külső könyvtárak előre letöltve (offline használathoz) – ha nem sikerül, nem akadályozza a telepítést

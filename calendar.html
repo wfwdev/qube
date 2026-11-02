@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Munkaidő naptár · Qube</title>
+    <meta name="theme-color" content="#ce4459">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="calendar" data-title="Munkaidő naptár">
+    <script>if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-mode');</script>
+
+    <main class="container app-main">
+        <!-- NAPTÁR -->
+        <section id="tab-cal">
+            <div class="today-card" id="todayCard"></div>
+            <div class="minimal-card cal-card">
+                <div class="period-nav mb-2">
+                    <button class="nav-arrow" id="calPrev" aria-label="Előző hónap">‹</button>
+                    <button class="cal-title" id="calTitle"></button>
+                    <button class="nav-arrow" id="calNext" aria-label="Következő hónap">›</button>
+                </div>
+                <div class="cal-grid" id="calGrid"></div>
+                <div class="cal-legend">
+                    <span><i class="lg lg-holiday"></i>Ünnep</span>
+                    <span><i class="lg lg-worksat"></i>Ledolgozós</span>
+                    <span><i class="lg lg-rest"></i>Pihenőnap</span>
+                    <span><i class="lg lg-leave"></i>Szabadságom</span>
+                    <span><i class="lg lg-others"></i>Kollégák</span>
+                </div>
+            </div>
+            <div class="text-muted tiny text-center">Koppints egy napra a részletekért és a szabadság bejelöléséhez.</div>
+        </section>
+
+        <!-- SZABADSÁG -->
+        <section id="tab-leave" class="hidden">
+            <div class="minimal-card">
+                <div class="period-nav mb-3">
+                    <button class="nav-arrow" id="qPrev" aria-label="Előző év">‹</button>
+                    <div class="fw-bold" id="qTitle"></div>
+                    <button class="nav-arrow" id="qNext" aria-label="Következő év">›</button>
+                </div>
+                <div class="quota-nums">
+                    <div><div class="stat-num" id="qUsed">0</div><div class="text-muted tiny">tervezett / kivett</div></div>
+                    <div><div class="stat-num" id="qLeft">–</div><div class="text-muted tiny">maradt</div></div>
+                    <div><div class="stat-num" id="qTotal">–</div><div class="text-muted tiny">éves keret</div></div>
+                </div>
+                <div class="bar mt-3"><span id="qBar" style="width:0%"></span></div>
+                <button class="btn btn-light w-100 mt-3" id="qEdit">Éves keret beállítása</button>
+                <div class="text-muted tiny mt-2">Csak a munkanapra eső szabadság számít bele. A keretet csak te látod.</div>
+            </div>
+
+            <h6 class="section-title">Saját szabadságaim</h6>
+            <div class="minimal-card p-2" id="myLeave"></div>
+
+            <h6 class="section-title">Kollégák szabadsága</h6>
+            <div class="minimal-card p-2" id="othersLeave"></div>
+        </section>
+
+        <!-- MŰSZAKOM -->
+        <section id="tab-shift" class="hidden">
+            <div class="minimal-card">
+                <h5 class="fw-bold mb-1">Műszakrendem</h5>
+                <p class="text-muted small mb-3">Ez alapján mutatja a naptár, melyik héten milyen műszakban vagy. Csak ezen a telefonon tárolódik.</p>
+                <div class="pill-nav" id="shMode">
+                    <button data-mode="3">3 műszak</button>
+                    <button data-mode="1">Nappalos</button>
+                    <button data-mode="none">Nem kérem</button>
+                </div>
+                <div id="sh3">
+                    <label class="form-label">Ezen a héten ebben a műszakban vagyok</label>
+                    <div class="pill-nav" id="shNow">
+                        <button data-s="DE">DE<br><span class="tiny">06–14</span></button>
+                        <button data-s="DU">DU<br><span class="tiny">14–22</span></button>
+                        <button data-s="E">É<br><span class="tiny">22–06</span></button>
+                    </div>
+                    <label class="form-label" for="shOrder">Forgás sorrendje</label>
+                    <select id="shOrder" class="form-select mb-3"></select>
+                    <label class="form-label">A következő hetek</label>
+                    <div id="shPreview"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/calendar.js"></script>
+</body>
+</html>

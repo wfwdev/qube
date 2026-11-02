@@ -20,6 +20,7 @@ service cloud.firestore {
     function userPath(uid) { return /databases/$(database)/documents/users/$(uid); }
     function rolePath(role) { return /databases/$(database)/documents/roles/$(role); }
     function me() { return get(userPath(request.auth.uid)).data; }
+    function recoveryPath(h) { return /databases/$(database)/documents/recoveryCodes/$(h); }
 
     function active() {
       return signedIn()
@@ -72,7 +73,19 @@ service cloud.firestore {
           && resource.data.status in ['active', 'disabled']
           && request.resource.data.status in ['active', 'disabled']
           && changed().hasOnly(['role', 'status'])
-          && exists(rolePath(request.resource.data.role)));
+          && exists(rolePath(request.resource.data.role)))
+        // 4) Admin vészkijárat: összekapcsolásra váró fiók egy egyszer használatos
+        //    vészkóddal (a kód ugyanebben a lépésben törlődik) visszaveszi az admin jogot
+        || (signedIn() && request.auth.uid == uid
+          && resource.data.status == 'conflict'
+          && changed().hasOnly(['role', 'status', 'recoveredWith'])
+          && request.resource.data.role == 'admin'
+          && request.resource.data.status == 'active'
+          && request.resource.data.recoveredWith is string
+          && request.resource.data.recoveredWith.matches('^[0-9a-f]{64}$')
+          && exists(recoveryPath(request.resource.data.recoveredWith))
+          && get(recoveryPath(request.resource.data.recoveredWith)).data.empId == resource.data.empId
+          && !existsAfter(recoveryPath(request.resource.data.recoveredWith)));
 
       allow delete: if isAdmin();
     }
@@ -90,6 +103,34 @@ service cloud.firestore {
 
       // Összekapcsolás, javítás, törlés: admin
       allow create, update, delete: if isAdmin() && validEmpId(empId);
+
+      // Admin vészkijárat: a vészkóddal visszaállított fiók átveszi a saját törzsszámát
+      allow update: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        && get(userPath(request.auth.uid)).data.status == 'conflict'
+        && getAfter(userPath(request.auth.uid)).data.empId == empId
+        && getAfter(userPath(request.auth.uid)).data.status == 'active'
+        && getAfter(userPath(request.auth.uid)).data.role == 'admin'
+        && exists(recoveryPath(getAfter(userPath(request.auth.uid)).data.recoveredWith))
+        && !existsAfter(recoveryPath(getAfter(userPath(request.auth.uid)).data.recoveredWith));
+    }
+
+    // ---------- Admin vészkódok ----------
+    // A dokumentum azonosítója a kód SHA-256 lenyomata – maga a kód sehol nincs tárolva.
+    // Nem-admin nem olvashatja (a szabályok ettől még ellenőrizni tudják).
+    match /recoveryCodes/{h} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && h.matches('^[0-9a-f]{64}$')
+        && request.resource.data.keys().hasOnly(['empId', 'createdAt'])
+        && validEmpId(request.resource.data.empId)
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isAdmin()
+        || (signedIn()
+          && resource.data.empId == get(userPath(request.auth.uid)).data.empId
+          && get(userPath(request.auth.uid)).data.status == 'conflict'
+          && getAfter(userPath(request.auth.uid)).data.recoveredWith == h);
     }
 
     // ---------- Szerepkörök ----------
@@ -179,6 +220,26 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reply', 'updatedAt'])
         && request.resource.data.status in ['new', 'progress', 'done', 'rejected'];
       allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // MUNKAIDŐ NAPTÁR – szabadságok (mindenki látja), éves keret (csak a saját)
+    // ============================================================
+    match /leave/{uid} {
+      allow read: if active();
+      allow create, update: if active() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'days', 'updatedAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.days is list && request.resource.data.days.size() <= 400
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isAdmin() || (signedIn() && request.auth.uid == uid);
+    }
+    match /leaveQuota/{uid} {
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if active() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['quota'])
+        && request.resource.data.quota is map;
     }
 
     // ---------- Modulok (következő lépésekben) ----------

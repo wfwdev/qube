@@ -461,6 +461,7 @@ body.dark-mode .snowflake { color: #fff; opacity: .45; }
 .help-body p, .help-body li { font-size: .92rem; line-height: 1.5; }
 .help-body ul, .help-body ol { padding-left: 20px; margin-bottom: 6px; }
 .tile-teal .tile-icon { background: rgba(12, 166, 120, .15); }
+.tile-red .tile-icon { background: rgba(206, 68, 89, .15); }
 .dashboard-tile { position: relative; }
 .tile-badge {
     position: absolute; top: 10px; right: 10px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
@@ -527,3 +528,82 @@ body.menu-open .app-navbar { z-index: 2060; }
 .menu-links a { display: block; padding: 12px 14px; color: var(--tx); text-decoration: none; font-weight: 600; font-size: .92rem; }
 .menu-links a + a { border-top: 1px solid var(--bord); }
 .menu-links a:active { background: var(--sur2); }
+
+/* ---------- 17. Vészkódok ---------- */
+.rec-codes { display: grid; gap: 8px; padding: 14px; border-radius: 12px; background: var(--sur2); border: 1px dashed var(--bord); font-size: 1.25rem; font-weight: 700; text-align: center; letter-spacing: 2px; user-select: all; }
+
+/* ---------- 18. Munkaidő naptár ---------- */
+.today-card {
+    padding: 16px 18px; margin-bottom: 16px; border-radius: 18px; color: #fff;
+    background: var(--brand-grad); box-shadow: 0 6px 18px rgba(157, 41, 178, .25);
+}
+.today-date { font-size: .8rem; opacity: .85; font-weight: 600; }
+.today-main { font-size: 1.25rem; font-weight: 700; margin: 4px 0 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.today-sub { display: flex; flex-direction: column; gap: 2px; font-size: .82rem; opacity: .95; }
+.today-setup { margin-top: 10px; border: 0; border-radius: 10px; padding: 8px 12px; background: rgba(255, 255, 255, .22); color: #fff; font-weight: 700; font-size: .85rem; }
+.today-card .sh-badge { box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
+
+.cal-card { padding: 14px 10px; }
+.cal-title { border: 0; background: 0; color: var(--tx); font-weight: 700; font-size: 1.05rem; }
+.cal-head, .cal-week { display: grid; grid-template-columns: 30px repeat(7, 1fr); gap: 4px; }
+.cal-head.no-shift, .cal-week.no-shift { grid-template-columns: repeat(7, 1fr); }
+.cal-head { margin-bottom: 4px; text-align: center; font-size: .72rem; font-weight: 700; color: var(--tx2); }
+.cal-head .we { color: var(--accent); }
+.cal-week { margin-bottom: 4px; }
+.cal-shift { display: flex; align-items: center; justify-content: center; }
+.cal-shift .sh-badge { width: 26px; height: 26px; font-size: .62rem; }
+
+.cal-day {
+    position: relative; aspect-ratio: 1; min-height: 38px; padding: 0;
+    border: 1px solid transparent; border-radius: 10px; background: var(--sur2); color: var(--tx);
+    font-weight: 600; font-size: .9rem; display: flex; align-items: center; justify-content: center;
+}
+.cal-day:active { transform: scale(.94); }
+.cal-day.out { opacity: .35; }
+.cal-day.t-weekend, .cal-day.t-restSwap { background: transparent; color: var(--tx2); }
+.cal-day.t-restSwap { border: 1px dashed var(--tx2); }
+.cal-day.t-holiday { background: #fde2e4; color: #c0263d; }
+.cal-day.t-workSat { background: #fff1d6; color: #b45309; border-color: #f59e0b; }
+.cal-day.leave { background: var(--brand-grad); color: #fff; border-color: transparent; }
+.cal-day.today { box-shadow: 0 0 0 2px var(--accent); }
+.cal-day .oth {
+    position: absolute; top: 2px; right: 3px; min-width: 14px; height: 14px; padding: 0 3px;
+    border-radius: 7px; background: #0ea5e9; color: #fff; font-size: .58rem; line-height: 14px; font-weight: 700;
+}
+.cal-day .mk { position: absolute; bottom: 1px; left: 0; right: 0; font-size: .5rem; font-weight: 800; }
+body.dark-mode .cal-day.t-holiday { background: #4a1d26; color: #ff8a9b; }
+body.dark-mode .cal-day.t-workSat { background: #45300f; color: #fbbf24; }
+
+.cal-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; margin-top: 10px; font-size: .72rem; color: var(--tx2); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.lg { display: inline-block; width: 12px; height: 12px; border-radius: 4px; }
+.lg-holiday { background: #fde2e4; border: 1px solid #c0263d; }
+.lg-worksat { background: #fff1d6; border: 1px solid #f59e0b; }
+.lg-rest { border: 1px dashed var(--tx2); }
+.lg-leave { background: var(--brand-grad); }
+.lg-others { background: #0ea5e9; border-radius: 50%; }
+
+.sh-badge {
+    display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+    border-radius: 50%; font-size: .7rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.sh-de { background: #f59e0b; }
+.sh-du { background: #0ea5e9; }
+.sh-e { background: #4338ca; }
+.sh-nap { background: #10b981; }
+
+.day-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.name-chip { display: inline-block; margin: 0 6px 6px 0; padding: 4px 10px; border-radius: 20px; background: var(--sur2); border: 1px solid var(--bord); font-size: .85rem; font-weight: 600; }
+
+.quota-nums { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+.leave-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; }
+.leave-row + .leave-row { border-top: 1px solid var(--bord); }
+#tab-shift .pill-nav button { line-height: 1.2; }
+
+/* Beállítások – munkanap-áthelyezések */
+.swap-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.swap-row + .swap-row { border-top: 1px solid var(--bord); }
+.swap-row .flex-grow-1 { min-width: 0; }
+.swap-tag { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.swap-tag.work { background: #fff1d6; color: #b45309; }
+.swap-tag.rest { background: var(--sur2); color: var(--tx2); border: 1px dashed var(--tx2); }
