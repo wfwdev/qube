@@ -161,13 +161,18 @@ export const openSideMenu = () => {
     const menu = $('#sideMenu');
     const profile = u ? `
         <div class="profile-head">
-            <div class="avatar">${esc((u.name || '?').trim().charAt(0).toUpperCase())}</div>
+            <button class="avatar-edit" id="avEdit" aria-label="Profilkép">
+                <span class="avatar lg">${esc((u.name || '?').trim().charAt(0).toUpperCase())}</span>
+                <span class="avatar-cam">📷</span>
+            </button>
+            <input type="file" id="avFile" accept="image/*" class="hidden">
             <div>
                 <div class="fw-bold">${esc(u.name)}</div>
                 <div class="text-muted small">Törzsszám: <b>${esc(u.empId)}</b></div>
                 <span class="role-badge mt-1">${esc(sessionRef.roleLabel)}</span>
             </div>
         </div>
+        <div id="avPanel" class="av-panel hidden"></div>
         <label class="form-label mt-4">Megjelenített név</label>
         <div class="d-flex gap-2 mb-1">
             <input type="text" id="profileName" class="form-control" maxlength="60" value="${esc(u.name)}">
@@ -229,12 +234,72 @@ export const openSideMenu = () => {
         }
     });
 
+    if (u) setupAvatar(u);
+
     clearTimeout(menuCloseTimer);
     menu.classList.add('open');
     $('#sideOverlay').classList.add('open');
     document.body.classList.add('menu-open');
     $('#menuBtn').classList.add('open');
     $('#menuBtn').setAttribute('aria-expanded', 'true');
+};
+
+// Profilkép a menüben: koppintás → választás → előnézet → mentés (js/avatar.js)
+const setupAvatar = async (u) => {
+    let A;
+    try { A = await import('./avatar.js'); } catch { return; }
+    const uid = sessionRef.uid;
+    const edit = $('#avEdit');
+    if (!edit) return;
+    edit.querySelector('.avatar').outerHTML = A.avatar(uid, u.name, 'lg');
+    const panel = $('#avPanel');
+    const file = $('#avFile');
+    const showMenu = () => {
+        if (!A.avatarsEnabled()) {
+            panel.innerHTML = '<div class="text-muted tiny">A profilképek jelenleg ki vannak kapcsolva.</div>';
+        } else {
+            panel.innerHTML = `
+                <button class="btn btn-light w-100 mb-2" id="avPick">📷 ${A.hasAvatar(uid) ? 'Kép cseréje' : 'Profilkép feltöltése'}</button>
+                ${A.hasAvatar(uid) ? '<button class="btn btn-outline-danger w-100 mb-2" id="avDel">Kép törlése</button>' : ''}
+                <div class="text-muted tiny">A képet mindenki látja, aki használja az appot. Feltöltés előtt a telefon kicsinyíti.</div>`;
+            $('#avPick', panel).addEventListener('click', () => file.click());
+            $('#avDel', panel)?.addEventListener('click', async () => {
+                if (!navigator.onLine) { feedback('error'); return toast('Ehhez internet kell.', 'error'); }
+                try { await A.removeAvatar(uid); feedback('success'); toast('Profilkép törölve', 'success'); showMenu(); }
+                catch (e) { console.error(e); feedback('error'); toast('Nem sikerült törölni.', 'error'); }
+            });
+        }
+        panel.classList.remove('hidden');
+    };
+    edit.addEventListener('click', () => {
+        feedback();
+        if (panel.classList.contains('hidden')) showMenu(); else panel.classList.add('hidden');
+    });
+    file.addEventListener('change', async () => {
+        const f = file.files[0];
+        file.value = '';
+        if (!f) return;
+        let data;
+        try { data = await A.prepareImage(f); }
+        catch { feedback('error'); return toast('Ezt a képet nem sikerült beolvasni.', 'error'); }
+        panel.innerHTML = `
+            <div class="text-center mb-2"><img class="av-preview" src="${data}" alt="Előnézet"></div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light flex-grow-1" id="avCancel">Mégsem</button>
+                <button class="btn btn-primary flex-grow-1" id="avSave">Mentés</button>
+            </div>`;
+        $('#avCancel', panel).addEventListener('click', showMenu);
+        $('#avSave', panel).addEventListener('click', async (e) => {
+            if (!navigator.onLine) { feedback('error'); return toast('A feltöltéshez internet kell.', 'error'); }
+            e.currentTarget.disabled = true;
+            try { await A.saveMyAvatar(uid, data); feedback('success'); toast('Profilkép mentve ✓', 'success'); panel.classList.add('hidden'); }
+            catch (err) {
+                console.error(err); feedback('error');
+                toast(err?.code === 'permission-denied' ? 'Most nem menthető – próbáld fél perc múlva.' : 'Nem sikerült menteni.', 'error');
+                showMenu();
+            }
+        });
+    });
 };
 
 let menuCloseTimer = null;

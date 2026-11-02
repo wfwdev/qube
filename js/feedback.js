@@ -8,6 +8,7 @@ import { ready } from './session.js';
 import { db, collection, doc, onSnapshot, query, where, updateDoc, deleteDoc, serverTimestamp } from './firebase.js';
 import { MODULES } from './config.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
+import { avatar } from './avatar.js';
 import { TYPES, STATUS, queueFeedback, flushFeedback, pendingFeedback } from './feedback-store.js';
 
 const session = await ready;
@@ -92,7 +93,7 @@ const card = (f, { admin = false } = {}) => {
             <span class="fw-bold small">${t.icon} ${esc(t.label)} · ${esc(moduleTitle(f.module))}</span>
             <span class="fb-status ${st.cls}">${esc(st.label)}</span>
         </div>
-        ${admin ? `<div class="text-muted tiny mb-1">${esc(f.name)} (${esc(f.empId)}) · ${fmtTime(timeOf(f))}</div>` : `<div class="text-muted tiny mb-1">${fmtTime(timeOf(f))}</div>`}
+        ${admin ? `<div class="text-muted tiny mb-1 d-flex align-items-center gap-2">${avatar(f.uid, f.name, 'xs')}<span>${esc(f.name)} (${esc(f.empId)}) · ${fmtTime(timeOf(f))}</span></div>` : `<div class="text-muted tiny mb-1">${fmtTime(timeOf(f))}</div>`}
         <div class="fb-text">${esc(f.text)}</div>
         ${f.reply ? `<div class="fb-reply"><b>Válasz:</b> ${esc(f.reply)}</div>` : ''}
     </button>`;

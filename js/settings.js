@@ -3,7 +3,7 @@
 // A Firestore szabály is csak adminnak engedi a settings írását.
 // ============================================================
 import { ready } from './session.js';
-import { loadSettings, saveAdvent, saveSwaps, DEFAULT_ADVENT_MESSAGES } from './features.js';
+import { loadSettings, saveAdvent, saveSwaps, saveAvatarsEnabled, DEFAULT_ADVENT_MESSAGES } from './features.js';
 import { BUILTIN_SWAPS, parseIso, fmtLong, dow } from './hu-calendar.js';
 import { openAdvent, adventDay, adventTeaser, az } from './advent.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
@@ -207,3 +207,16 @@ $('#swapList').addEventListener('click', (e) => {
     storeSwaps(next, 'Mentve ✓');
 });
 renderSwaps();
+
+// ============================================================
+// PROFILKÉPEK be/ki
+// ============================================================
+const avChk = $('#avEnabled');
+avChk.checked = initial.avatars.enabled;
+avChk.addEventListener('change', async () => {
+    feedback();
+    try {
+        await saveAvatarsEnabled(avChk.checked);
+        feedback('success'); toast(avChk.checked ? 'Profilképek bekapcsolva' : 'Profilképek kikapcsolva', 'success');
+    } catch (e) { fail(e); avChk.checked = !avChk.checked; }
+});

@@ -11,6 +11,7 @@ import { db, collection, doc, onSnapshot, getDoc, setDoc, serverTimestamp } from
 import { cachedSettings, loadSettings } from './features.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs, selectPageTab } from './ui.js';
 import { registerHelp } from './help.js';
+import { avatar } from './avatar.js';
 import {
     BUILTIN_SWAPS, MONTHS, DAYS_SHORT, SHIFTS, ORDERS,
     iso, parseIso, addDays, today, dow, mondayOf, fmtDay, fmtLong,
@@ -47,8 +48,8 @@ applySwaps(cachedSettings());
 const myDays = () => new Set(leaves[uid]?.days || []);
 const othersOn = (k) => Object.entries(leaves)
     .filter(([id, l]) => id !== uid && l.days?.includes(k))
-    .map(([, l]) => l.name || '?')
-    .sort((a, b) => a.localeCompare(b, 'hu'));
+    .map(([id, l]) => ({ id, name: l.name || '?' }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'hu'));
 
 // ============================================================
 // MA KÁRTYA
@@ -160,7 +161,7 @@ const openDay = (k) => {
                 ${mine ? 'Szabadság törlése erről a napról' : '🏖️ Szabadságon leszek ezen a napon'}
             </button>` : (mine ? `<button class="btn btn-outline-danger w-100 mb-3" id="dayLeave">Szabadság törlése erről a napról</button>` : '')}
         <h6 class="fw-bold mb-2">Kollégák szabadságon</h6>
-        <div class="mb-3">${others.length ? others.map((n) => `<span class="name-chip">${esc(n)}</span>`).join('') : '<span class="text-muted small">Senki</span>'}</div>
+        <div class="mb-3">${others.length ? others.map((o) => `<span class="name-chip with-av">${avatar(o.id, o.name, 'xs')}${esc(o.name)}</span>`).join('') : '<span class="text-muted small">Senki</span>'}</div>
         <button class="btn btn-light w-100" id="dayClose">Bezárás</button>`);
     $('#dayClose', sheet).addEventListener('click', closeSheet);
     $('#dayLeave', sheet)?.addEventListener('click', () => toggleLeave(k));
@@ -222,11 +223,11 @@ const renderLeave = () => {
     const rows = [];
     Object.entries(leaves).forEach(([id, l]) => {
         if (id === uid) return;
-        groupRanges((l.days || []).filter((k) => k >= tk), swaps).forEach((r) => rows.push({ name: l.name || '?', r }));
+        groupRanges((l.days || []).filter((k) => k >= tk), swaps).forEach((r) => rows.push({ id, name: l.name || '?', r }));
     });
     rows.sort((a, b) => a.r.start - b.r.start || a.name.localeCompare(b.name, 'hu'));
-    $('#othersLeave').innerHTML = rows.length ? rows.map(({ name, r }) => `
-        <div class="leave-row"><span><span class="fw-bold">${esc(name)}</span><br><span class="text-muted small">${esc(fmtRange(r))}</span></span><span class="text-muted small">${r.count} nap</span></div>`).join('')
+    $('#othersLeave').innerHTML = rows.length ? rows.map(({ id, name, r }) => `
+        <div class="leave-row"><span class="d-flex align-items-center gap-2">${avatar(id, name, 'sm')}<span><span class="fw-bold">${esc(name)}</span><br><span class="text-muted small">${esc(fmtRange(r))}</span></span></span><span class="text-muted small">${r.count} nap</span></div>`).join('')
         : '<div class="text-muted small p-2">Nincs tervezett szabadság.</div>';
 };
 

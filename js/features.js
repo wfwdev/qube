@@ -58,8 +58,15 @@ const merge = (data) => {
             messages: DEFAULT_ADVENT_MESSAGES.map((m, i) => (typeof msgs[i] === 'string' && msgs[i].trim()) ? msgs[i] : m)
         },
         // Munkanap-áthelyezések admin kiegészítése: 'work' | 'rest' | 'none' (beépített törlése)
-        calendar: { swaps: cleanSwaps(data?.calendar?.swapList) }
+        calendar: { swaps: cleanSwaps(data?.calendar?.swapList) },
+        // Profilképek: alapból bekapcsolva; kikapcsolva csak monogram látszik és nem lehet feltölteni
+        avatars: { enabled: data?.avatars?.enabled !== false }
     };
+};
+
+// Admin: profilképek be/ki
+export const saveAvatarsEnabled = async (enabled) => {
+    await setDoc(doc(db, 'settings', 'app'), { avatars: { enabled: !!enabled } }, { merge: true });
 };
 
 // Admin: munkanap-áthelyezések mentése (a teljes admin lista)

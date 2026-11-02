@@ -8,6 +8,7 @@ import {
 import { PERMISSIONS, DEFAULT_ROLES, NEW_USER_ROLE, EMP_ID_PATTERN } from './config.js';
 import { esc, $, feedback, toast, openSheet, closeSheet } from './ui.js';
 import { registerHelp } from './help.js';
+import { avatar, hasAvatar, removeAvatar } from './avatar.js';
 
 const session = await ready;
 const canManage = session.can('users.manage');
@@ -82,7 +83,7 @@ const renderUsers = () => {
         const st = STATUS[u.status] || { label: u.status, cls: '' };
         return `
         <button class="user-row" data-id="${esc(u.id)}">
-            <div class="avatar sm">${esc((u.name || '?').charAt(0).toUpperCase())}</div>
+            ${avatar(u.id, u.name, 'sm')}
             <div class="flex-grow-1 text-start">
                 <div class="fw-bold">${esc(u.name)} ${u.id === session.uid ? '<span class="me-badge">Én</span>' : ''}</div>
                 <div class="text-muted tiny">${esc(u.empId)} · ${esc(roleLabel(u.role))} · ${fmtTime(u.lastActive)}</div>
@@ -118,14 +119,15 @@ const openUser = (id) => {
 
     let body = `
         <div class="d-flex align-items-center gap-3 mb-4">
-            <div class="avatar">${esc((u.name || '?').charAt(0).toUpperCase())}</div>
+            ${avatar(u.id, u.name, 'lg')}
             <div>
                 <h5 class="fw-bold mb-0">${esc(u.name)}</h5>
                 <div class="text-muted small">Törzsszám: <b>${esc(u.empId)}</b></div>
                 <span class="status ${st.cls}">${esc(st.label)}</span>
             </div>
         </div>
-        <div class="text-muted tiny mb-3">Regisztrált: ${fmtTime(u.createdAt)} · Utoljára aktív: ${fmtTime(u.lastActive)}</div>`;
+        <div class="text-muted tiny mb-3">Regisztrált: ${fmtTime(u.createdAt)} · Utoljára aktív: ${fmtTime(u.lastActive)}</div>
+        ${isAdmin && hasAvatar(u.id) ? '<button class="btn btn-sm btn-outline-danger w-100 mb-3" id="uAvDel">🖼️ Profilkép törlése</button>' : ''}`;
 
     if (u.status === 'conflict') {
         body += isAdmin
@@ -167,6 +169,12 @@ const openUser = (id) => {
     $('#uEmpSave', sheet)?.addEventListener('click', () => changeEmpId(u, $('#uEmp', sheet).value.trim()));
     $('#uLink', sheet)?.addEventListener('click', () => linkUser(u));
     $('#uDelete', sheet)?.addEventListener('click', () => removeUser(u));
+    $('#uAvDel', sheet)?.addEventListener('click', async (e) => {
+        if (!confirm(`Törlöd ${u.name} profilképét?`)) return;
+        e.currentTarget.disabled = true;
+        try { await removeAvatar(u.id); ok('Profilkép törölve'); e.target.remove(); }
+        catch (err) { fail(err); e.target.disabled = false; }
+    });
 };
 
 const saveUser = async (u, sheet) => {
