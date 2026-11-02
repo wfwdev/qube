@@ -97,7 +97,35 @@ const screenOnboarding = (uid) => {
 
 const screenForStatus = (d) => {
     if (d.status === 'conflict') {
-        return screenMessage('🔗', 'Összekapcsolás folyamatban', 'Kérem, várjon.');
+        const s = screenMessage('🔗', 'Összekapcsolás folyamatban', 'Kérem, várjon.',
+            `<button class="btn btn-link btn-sm text-muted mt-4" id="recoveryOpen">🔑 Admin vészkód</button>
+             <div class="hidden text-start mt-3" id="recoveryBox">
+                <label class="form-label">Vészkód</label>
+                <input type="text" id="recoveryCode" class="form-control form-control-lg mono mb-2" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX">
+                <button class="btn btn-primary w-100" id="recoverySend">Visszaállítás</button>
+             </div>`);
+        $('#recoveryOpen', s).addEventListener('click', (e) => {
+            e.target.classList.add('hidden');
+            $('#recoveryBox', s).classList.remove('hidden');
+            $('#recoveryCode', s).focus();
+        });
+        $('#recoverySend', s).addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true; btn.textContent = 'Ellenőrzés…';
+            try {
+                const { recoverWithCode } = await import('./recovery.js');
+                await recoverWithCode({ uid: d.uid, empId: d.empId, code: $('#recoveryCode', s).value });
+                feedback('success'); toast('Fiók visszaállítva ✓', 'success');
+                // A profil-figyelő magától továbblép
+            } catch (err) {
+                console.error(err);
+                feedback('error');
+                toast(err?.code === 'format' ? 'A kód 10 karakter (XXXXX-XXXXX).'
+                    : !navigator.onLine ? 'Ehhez internet kell.' : 'Hibás vagy már felhasznált kód.', 'error');
+                btn.disabled = false; btn.textContent = 'Visszaállítás';
+            }
+        });
+        return s;
     }
     if (d.status === 'disabled') {
         return screenMessage('⛔', 'Fiók letiltva', 'A fiókod le van tiltva, ezért a Qube nem használható.');
@@ -263,7 +291,7 @@ const verify = async (cached, onActive) => {
 
         if (d.status !== 'active') {
             clearCache();
-            screenForStatus(d);
+            screenForStatus({ ...d, uid });
             return;
         }
 
