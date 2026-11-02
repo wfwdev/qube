@@ -15,17 +15,21 @@ const setting = (key, def) => {
     return v === null ? def : v === 'true';
 };
 
-// ---------- Téma (az oldal tetején lévő inline script már beállítja) ----------
-const applyTheme = (theme) => {
-    document.body.classList.toggle('dark-mode', theme === 'dark');
-    const btn = $('#themeToggle');
-    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+// ---------- Téma: 'light' | 'dark' | 'auto' (a rendszer beállítását követi) ----------
+// Az oldal tetején lévő inline script már az első kirajzolás előtt beállítja.
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+const themeMode = () => { const t = localStorage.getItem('theme'); return t === 'light' || t === 'dark' ? t : 'auto'; };
+const applyTheme = () => {
+    const m = themeMode();
+    const dark = m === 'dark' || (m === 'auto' && systemDark.matches);
+    document.body.classList.toggle('dark-mode', dark);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#9d29b2' : '#ff5f00');
 };
-const toggleTheme = () => {
-    const next = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-    localStorage.setItem('theme', next);
-    applyTheme(next);
+const setThemeMode = (m) => {
+    if (m === 'auto') localStorage.removeItem('theme'); else localStorage.setItem('theme', m);
+    applyTheme();
 };
+systemDark.addEventListener?.('change', () => { if (themeMode() === 'auto') applyTheme(); });
 
 // ---------- Visszajelzés: villanás, hang, rezgés ----------
 let audioCtx = null;
@@ -112,10 +116,15 @@ const injectShell = () => {
     document.body.insertAdjacentHTML('afterbegin', `
     <div id="flashOverlay"></div>
     <nav class="app-navbar">
-        <div class="navbar-title">${esc(title)}</div>
+        <a class="navbar-brand-row" href="index.html" aria-label="Kezdőlap">
+            <img class="navbar-logo" src="icons/icon.svg" alt="" width="34" height="34">
+            <span class="navbar-title">${esc(title)}</span>
+        </a>
         <div class="d-flex align-items-center gap-2">
             <button id="updateBtn" class="update-btn hidden">🔄 Frissítés</button>
-            <button id="themeToggle" class="nav-btn" aria-label="Téma">🌙</button>
+            <button id="menuBtn" class="hamburger" aria-label="Menü" aria-expanded="false" aria-controls="sideMenu">
+                <span></span><span></span><span></span>
+            </button>
         </div>
     </nav>
     <div id="appScreen" class="app-screen">
@@ -129,9 +138,10 @@ const injectShell = () => {
     <div class="overlay" id="sheetOverlay"><div class="modal-custom" id="sheetBody"></div></div>
     <div class="app-toast" id="toast"></div>`);
 
-    applyTheme(localStorage.getItem('theme') === 'dark' || document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-    $('#themeToggle').addEventListener('click', () => { feedback(); toggleTheme(); });
+    applyTheme();
+    $('#menuBtn').addEventListener('click', () => ($('#sideMenu').classList.contains('open') ? closeSideMenu() : openSideMenu()));
     $('#sideOverlay').addEventListener('click', closeSideMenu);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSideMenu(); });
     $('#sheetOverlay').addEventListener('click', (e) => { if (e.target.id === 'sheetOverlay') closeSheet(); });
 };
 
@@ -145,11 +155,10 @@ const switchRow = (id, title, sub) => `
     </label>`;
 
 export const openSideMenu = () => {
-    if (!sessionRef?.user) return;
     feedback();
-    const u = sessionRef.user;
+    const u = sessionRef?.user;
     const menu = $('#sideMenu');
-    menu.innerHTML = `
+    const profile = u ? `
         <div class="profile-head">
             <div class="avatar">${esc((u.name || '?').trim().charAt(0).toUpperCase())}</div>
             <div>
@@ -158,13 +167,21 @@ export const openSideMenu = () => {
                 <span class="role-badge mt-1">${esc(sessionRef.roleLabel)}</span>
             </div>
         </div>
-
         <label class="form-label mt-4">Megjelenített név</label>
         <div class="d-flex gap-2 mb-1">
             <input type="text" id="profileName" class="form-control" maxlength="60" value="${esc(u.name)}">
             <button class="btn btn-light px-3" id="profileSave">✓</button>
         </div>
-        <div class="text-muted tiny mb-4">A törzsszámot csak az adminisztrátor módosíthatja.</div>
+        <div class="text-muted tiny mb-4">A törzsszámot csak az adminisztrátor módosíthatja.</div>` : '';
+
+    menu.innerHTML = `
+        ${profile}
+        <h6 class="section-title">🎨 Megjelenés</h6>
+        <div class="theme-switch mb-4" id="themeSwitch">
+            <button data-theme="light">☀️<span>Világos</span></button>
+            <button data-theme="dark">🌙<span>Sötét</span></button>
+            <button data-theme="auto">📱<span>Automatikus</span></button>
+        </div>
 
         <h6 class="section-title">⚙️ Beállítások</h6>
         ${switchRow('settingAudio', 'Hangjelzés', 'Csippanás sikeres műveletnél')}
@@ -172,8 +189,21 @@ export const openSideMenu = () => {
         ${switchRow('settingFlash', 'Képernyő villanás', 'Vizuális visszajelzés')}
         ${switchRow('settingWakeLock', 'Ébrentartás', 'A kijelző nem alszik el')}
 
-        <a class="btn btn-light w-100 mt-3" href="feedback.html">💬 Hiba vagy ötlet beküldése</a>
+        <div class="menu-links mt-3">
+            <a href="info.html">ℹ️ Infó és súgó</a>
+            <a href="feedback.html">💬 Hiba vagy ötlet beküldése</a>
+        </div>
         <div class="text-center text-muted tiny mt-4 pb-5">${esc(APP.name)} v${esc(APP.version)} · ${esc(APP.build)}</div>`;
+
+    // Téma választó
+    const sw = $('#themeSwitch');
+    const markTheme = () => sw.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.theme === themeMode()));
+    sw.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-theme]');
+        if (!b) return;
+        feedback(); setThemeMode(b.dataset.theme); markTheme();
+    });
+    markTheme();
 
     const defaults = { settingAudio: true, settingVibrate: true, settingFlash: true, settingWakeLock: false };
     Object.entries(defaults).forEach(([key, def]) => {
@@ -186,11 +216,12 @@ export const openSideMenu = () => {
         });
     });
 
-    $('#profileSave').addEventListener('click', async () => {
+    $('#profileSave')?.addEventListener('click', async () => {
         const name = $('#profileName').value.trim();
         if (name.length < 3) { feedback('error'); return toast('A név legalább 3 karakter legyen!', 'error'); }
         try {
             await sessionRef.updateName(name);
+            sessionRef.user = { ...sessionRef.user, name };
             feedback('success'); toast('Név frissítve ✓', 'success');
             closeSideMenu();
         } catch (e) {
@@ -200,11 +231,17 @@ export const openSideMenu = () => {
 
     menu.classList.add('open');
     $('#sideOverlay').classList.add('open');
+    document.body.classList.add('menu-open');
+    $('#menuBtn').classList.add('open');
+    $('#menuBtn').setAttribute('aria-expanded', 'true');
 };
 
 export const closeSideMenu = () => {
     $('#sideMenu')?.classList.remove('open');
     $('#sideOverlay')?.classList.remove('open');
+    document.body.classList.remove('menu-open');
+    $('#menuBtn')?.classList.remove('open');
+    $('#menuBtn')?.setAttribute('aria-expanded', 'false');
 };
 
 // ---------- Alsó menü ----------
@@ -219,13 +256,12 @@ const renderNav = () => {
     if (!sessionRef) return;
     const page = document.body.dataset.page;
     const home = { id: 'home', icon: '🏠', label: 'Kezdőlap', go: 'index.html' };
-    const profile = { id: 'profile', icon: '👤', label: 'Profil', action: openSideMenu };
     const info = { id: 'info', icon: 'ℹ️', label: 'Infó', go: 'info.html' };
-    // A Profil és az Infó csak a kezdőlapon van (az Infó a jobb szélen)
+    // Az Infó csak a kezdőlapon van (a jobb szélen); a profil a fejléc ☰ menüjében
     const onHome = page === 'home';
     const items = (pageTabs
         ? [home, ...pageTabs.map((t) => ({ ...t, tab: true }))]
-        : [home, sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' }, onHome && profile, onHome && info]
+        : [home, sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' }, onHome && info]
     ).filter(Boolean);
     if (helpAction) items.push({ id: 'help', icon: '❓', label: 'Súgó', action: helpAction });
 
