@@ -623,3 +623,44 @@ body.dark-mode .cal-day.t-workSat { background: #45300f; color: #fbbf24; }
 .swap-tag { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
 .swap-tag.work { background: #fff1d6; color: #b45309; }
 .swap-tag.rest { background: var(--sur2); color: var(--tx2); border: 1px dashed var(--tx2); }
+
+/* ---------- 19. Vezérlőpult (Beállítások) ---------- */
+.cp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 6px; }
+.cp-stat {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    padding: 12px 6px; border-radius: 16px; text-align: center; text-decoration: none;
+    background: var(--sur); border: 1px solid var(--bord); color: var(--tx);
+}
+.cp-stat:active { transform: scale(.97); }
+.cp-stat-num { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.cp-stat-lbl { font-size: .68rem; font-weight: 600; color: var(--tx2); line-height: 1.2; }
+.cp-stat.alert { border-color: #e11d48; background: rgba(225, 29, 72, .07); }
+.cp-stat.alert .cp-stat-num { color: #e11d48; }
+
+.cp-group { margin: 22px 4px 8px; font-size: .72rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--tx2); }
+.cp-list { border-radius: 16px; overflow: hidden; background: var(--sur); border: 1px solid var(--bord); }
+.cp-row {
+    display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px;
+    color: var(--tx); text-decoration: none; cursor: pointer; -webkit-user-select: none; user-select: none;
+}
+.cp-row + .cp-row { border-top: 1px solid var(--bord); }
+.cp-row:active { background: var(--sur2); }
+.cp-ico {
+    flex: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; background: var(--sur2);
+}
+.cp-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cp-txt b { font-size: .95rem; }
+.cp-txt small { font-size: .74rem; color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-txt small.text-danger { color: #e11d48 !important; }
+.cp-chev { flex: none; font-size: 1.4rem; line-height: 1; color: var(--tx2); }
+.cp-row .form-switch { flex: none; padding-left: 2.5em; }
+
+.cp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.cp-head h5 { margin: 0; font-weight: 700; font-size: 1.1rem; }
+.cp-back {
+    flex: none; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--bord);
+    background: var(--sur); color: var(--tx); font-size: 1.5rem; line-height: 1;
+}
+.cp-back:active { background: var(--sur2); }
+.cp-view .minimal-card { margin-bottom: 0; }

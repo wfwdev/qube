@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Beállítások · Qube</title>
+    <title>Vezérlőpult · Qube</title>
     <meta name="theme-color" content="#ce4459">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,69 +20,127 @@
     <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js">
     <link rel="stylesheet" href="style.css">
 </head>
-<body data-page="settings" data-title="Beállítások" data-perm="admin.only">
+<body data-page="settings" data-title="Vezérlőpult" data-perm="admin.only">
     <script>if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-mode');</script>
 
     <main class="container app-main">
-        <p class="text-muted small">Az itt beállított funkciók minden felhasználónál érvényesek. Ezt az oldalt csak admin éri el.</p>
 
-        <!-- ADVENTI NAPTÁR -->
-        <section class="minimal-card">
-            <h5 class="fw-bold mb-3">🎄 Adventi naptár</h5>
-            <label class="setting-row" for="advEnabled">
-                <div><div class="fw-bold small">Bekapcsolva</div><div class="text-muted tiny">Nov. 15-től ikon a név mellett, dec. 1–31. a naptár</div></div>
-                <div class="form-check form-switch fs-5 mb-0"><input class="form-check-input" type="checkbox" role="switch" id="advEnabled"></div>
-            </label>
-            <label class="setting-row" for="advSnow">
-                <div><div class="fw-bold small">Hóesés</div><div class="text-muted tiny">A kezdőlapon, amíg a naptár látszik</div></div>
-                <div class="form-check form-switch fs-5 mb-0"><input class="form-check-input" type="checkbox" role="switch" id="advSnow"></div>
-            </label>
-            <div class="text-muted tiny mb-3" id="advStatus"></div>
-
-            <label class="form-label">Előnézet</label>
-            <div class="d-flex gap-2 mb-4">
-                <select id="advPreviewDay" class="form-select"></select>
-                <button class="btn btn-light px-3 text-nowrap" id="advPreview">Megnézem</button>
+        <!-- ============ VEZÉRLŐPULT (áttekintés) ============ -->
+        <section id="view-home" class="cp-view">
+            <div class="cp-stats">
+                <a class="cp-stat" href="admin.html">
+                    <span class="cp-stat-num" id="stUsers">…</span>
+                    <span class="cp-stat-lbl">aktív felhasználó</span>
+                </a>
+                <a class="cp-stat" href="admin.html#varakozo" id="stWaitBox">
+                    <span class="cp-stat-num" id="stWait">…</span>
+                    <span class="cp-stat-lbl">összekapcsolásra vár</span>
+                </a>
+                <a class="cp-stat" href="feedback.html" id="stFbBox">
+                    <span class="cp-stat-num" id="stFb">…</span>
+                    <span class="cp-stat-lbl">új visszajelzés</span>
+                </a>
             </div>
 
-            <label class="form-label">Napi üzenetek</label>
+            <h6 class="cp-group">Funkciók</h6>
+            <div class="cp-list">
+                <div class="cp-row" data-open="advent">
+                    <span class="cp-ico">🎄</span>
+                    <span class="cp-txt"><b>Adventi naptár</b><small id="sumAdvent"></small></span>
+                    <span class="form-check form-switch fs-5 mb-0" data-stop><input class="form-check-input" type="checkbox" role="switch" id="advEnabled" aria-label="Adventi naptár be/ki"></span>
+                    <span class="cp-chev">›</span>
+                </div>
+                <div class="cp-row">
+                    <span class="cp-ico">🖼️</span>
+                    <span class="cp-txt"><b>Profilképek</b><small id="sumAvatars"></small></span>
+                    <span class="form-check form-switch fs-5 mb-0" data-stop><input class="form-check-input" type="checkbox" role="switch" id="avEnabled" aria-label="Profilképek be/ki"></span>
+                </div>
+                <div class="cp-row" data-open="swaps">
+                    <span class="cp-ico">📅</span>
+                    <span class="cp-txt"><b>Munkanap-áthelyezések</b><small id="sumSwaps"></small></span>
+                    <span class="cp-chev">›</span>
+                </div>
+            </div>
+
+            <h6 class="cp-group">Biztonság</h6>
+            <div class="cp-list">
+                <div class="cp-row" data-open="recovery">
+                    <span class="cp-ico">🔑</span>
+                    <span class="cp-txt"><b>Admin vészkódok</b><small id="sumRecovery">…</small></span>
+                    <span class="cp-chev">›</span>
+                </div>
+                <a class="cp-row" href="admin.html#roles">
+                    <span class="cp-ico">🛡️</span>
+                    <span class="cp-txt"><b>Szerepkörök és jogosultságok</b><small>Ki mit érhet el</small></span>
+                    <span class="cp-chev">›</span>
+                </a>
+            </div>
+
+            <h6 class="cp-group">Rendszer</h6>
+            <div class="cp-list">
+                <a class="cp-row" href="feedback.html">
+                    <span class="cp-ico">💬</span>
+                    <span class="cp-txt"><b>Visszajelzések</b><small>Hibák és ötletek kezelése</small></span>
+                    <span class="cp-chev">›</span>
+                </a>
+                <a class="cp-row" href="reset.html">
+                    <span class="cp-ico">🧹</span>
+                    <span class="cp-txt"><b>Gyorsítótár törlése</b><small>Csak ezen a telefonon – ha beragadt egy régi verzió</small></span>
+                    <span class="cp-chev">›</span>
+                </a>
+            </div>
+            <div class="text-center text-muted tiny mt-3" id="cpVersion"></div>
+        </section>
+
+        <!-- ============ ADVENTI NAPTÁR ============ -->
+        <section id="view-advent" class="cp-view hidden">
+            <div class="cp-head"><button class="cp-back" data-back aria-label="Vissza">‹</button><h5>🎄 Adventi naptár</h5></div>
+            <div class="minimal-card">
+                <div class="text-muted small mb-3" id="advStatus"></div>
+                <label class="setting-row" for="advSnow">
+                    <div><div class="fw-bold small">Hóesés</div><div class="text-muted tiny">A kezdőlapon, amíg a naptár látszik</div></div>
+                    <div class="form-check form-switch fs-5 mb-0"><input class="form-check-input" type="checkbox" role="switch" id="advSnow"></div>
+                </label>
+                <label class="form-label mt-2">Előnézet</label>
+                <div class="d-flex gap-2">
+                    <select id="advPreviewDay" class="form-select"></select>
+                    <button class="btn btn-light px-3 text-nowrap" id="advPreview">Megnézem</button>
+                </div>
+            </div>
+            <h6 class="cp-group">Napi üzenetek</h6>
             <div class="msg-list" id="advMsgs"></div>
+            <div class="text-muted tiny mt-2">Koppints egy napra a szöveg szerkesztéséhez. A ✎ jel a módosított napokat mutatja.</div>
         </section>
 
-        <!-- PROFILKÉPEK -->
-        <section class="minimal-card">
-            <h5 class="fw-bold mb-3">🖼️ Profilképek</h5>
-            <label class="setting-row" for="avEnabled">
-                <div><div class="fw-bold small">Profilkép feltöltése engedélyezve</div><div class="text-muted tiny">Kikapcsolva mindenhol monogram látszik, és nem lehet új képet feltölteni</div></div>
-                <div class="form-check form-switch fs-5 mb-0"><input class="form-check-input" type="checkbox" role="switch" id="avEnabled"></div>
-            </label>
-            <div class="text-muted tiny">Egy nem odaillő képet a <b>Felhasználók</b> oldalon, a felhasználóra koppintva törölhetsz.</div>
-        </section>
-
-        <!-- MUNKANAP-ÁTHELYEZÉSEK -->
-        <section class="minimal-card">
-            <h5 class="fw-bold mb-1">📅 Munkanap-áthelyezések</h5>
-            <p class="text-muted small mb-3">A munkaidő naptár ünnepnapjait az app magától számolja. A ledolgozós szombatokat és az áthelyezett pihenőnapokat évente rendelet adja ki – az újakat itt veheted fel.</p>
-            <div id="swapList" class="mb-3"></div>
-            <label class="form-label" for="swapDate">Új áthelyezés</label>
-            <input type="date" id="swapDate" class="form-control mb-2">
-            <div class="pill-nav mb-2" id="swapType">
-                <button data-t="work" class="active">🛠️ Ledolgozós nap</button>
-                <button data-t="rest">😌 Pihenőnap</button>
+        <!-- ============ MUNKANAP-ÁTHELYEZÉSEK ============ -->
+        <section id="view-swaps" class="cp-view hidden">
+            <div class="cp-head"><button class="cp-back" data-back aria-label="Vissza">‹</button><h5>📅 Munkanap-áthelyezések</h5></div>
+            <p class="text-muted small">Az ünnepnapokat az app magától számolja. A ledolgozós szombatokat és az áthelyezett pihenőnapokat évente rendelet adja ki – az újakat itt veheted fel.</p>
+            <div class="minimal-card">
+                <label class="form-label" for="swapDate">Új áthelyezés</label>
+                <input type="date" id="swapDate" class="form-control mb-2">
+                <div class="pill-nav mb-2" id="swapType">
+                    <button data-t="work" class="active">🛠️ Ledolgozós</button>
+                    <button data-t="rest">😌 Pihenőnap</button>
+                </div>
+                <button class="btn btn-primary w-100" id="swapAdd">Hozzáadás</button>
             </div>
-            <button class="btn btn-primary w-100" id="swapAdd">Hozzáadás</button>
+            <h6 class="cp-group">Érvényes áthelyezések</h6>
+            <div class="minimal-card py-2" id="swapList"></div>
         </section>
 
-        <!-- ADMIN VÉSZKIJÁRAT -->
-        <section class="minimal-card">
-            <h5 class="fw-bold mb-1">🔑 Admin vészkijárat</h5>
-            <p class="text-muted small mb-3">Ha új telefonra váltasz vagy törlődnek az app adatai, az „Összekapcsolás folyamatban” képernyőn egy vészkóddal visszaveheted az admin fiókodat. Minden kód <b>egyszer</b> használható.</p>
-            <div class="setting-row mb-3">
-                <div><div class="fw-bold small">Fel nem használt kódok</div><div class="text-muted tiny">A te törzsszámodhoz</div></div>
-                <div class="fw-bold fs-5" id="recCount">…</div>
+        <!-- ============ ADMIN VÉSZKÓDOK ============ -->
+        <section id="view-recovery" class="cp-view hidden">
+            <div class="cp-head"><button class="cp-back" data-back aria-label="Vissza">‹</button><h5>🔑 Admin vészkódok</h5></div>
+            <div class="minimal-card">
+                <p class="text-muted small mb-3">Ha új telefonra váltasz vagy törlődnek az app adatai, az „Összekapcsolás folyamatban” képernyőn egy vészkóddal visszaveheted az admin fiókodat. Minden kód <b>egyszer</b> használható.</p>
+                <div class="setting-row mb-3">
+                    <div><div class="fw-bold small">Fel nem használt kódok</div><div class="text-muted tiny">A te törzsszámodhoz</div></div>
+                    <div class="fw-bold fs-5" id="recCount">…</div>
+                </div>
+                <button class="btn btn-light w-100" id="recGen">Új vészkódok generálása</button>
+                <div class="text-muted tiny mt-2">Új kódok generálásakor a régiek érvénytelenné válnak.</div>
             </div>
-            <button class="btn btn-light w-100" id="recGen">Új vészkódok generálása</button>
-            <div class="text-muted tiny mt-2">Új kódok generálásakor a régiek érvénytelenné válnak.</div>
         </section>
     </main>
 
