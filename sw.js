@@ -21,6 +21,7 @@ const APP_SHELL = [
     './pack.html',
     './info.html',
     './settings.html',
+    './stats.html',
     './feedback.html',
     './calendar.html',
     './olvaso-teszt.html',
@@ -53,7 +54,9 @@ const APP_SHELL = [
     './js/recovery.js',
     './js/calendar.js',
     './js/hu-calendar.js',
-    './js/avatar.js'
+    './js/avatar.js',
+    './js/track.js',
+    './js/stats.js'
 ];
 
 // Külső könyvtárak előre letöltve (offline használathoz) – ha nem sikerül, nem akadályozza a telepítést

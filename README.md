@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.11.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
+**Állapot:** v2.12.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
 
 ## Felépítés
 
@@ -36,6 +36,8 @@ feedback.html, js/feedback.js  Visszajelzés: hiba / ötlet beküldése, saját 
 js/feedback-store.js  Visszajelzés beküldése helyi sorral (offline is)
 js/recovery.js      Admin vészkijárat (egyszer használatos vészkódok)
 calendar.html, js/calendar.js  Munkaidő naptár (ünnepek, műszak, szabadság)
+stats.html, js/stats.js  Használati statisztika (admin)
+js/track.js         Használati adatok gyűjtése (minden oldalon, ui.js indítja)
 js/avatar.js        Profilképek (kicsinyítés, helyi tár, megjelenítés)
 js/hu-calendar.js   Magyar ünnepnapok, munkanap-áthelyezések, műszakforgás számítása
 ```
@@ -118,6 +120,13 @@ Ha az admin új eszközről „Összekapcsolás folyamatban” állapotba kerül
 - Szabályok: mindenki csak a sajátját írhatja, kép és index csak együtt változhat, 20 mp-enként legfeljebb egy csere, csak JPEG.
 - Admin: **Beállítások → Profilképek** (ki/be; kikapcsolva mindenhol monogram), bárki képe törölhető a **Felhasználók** oldalon.
 - Új eszközre áthelyezett fióknál a képet újra fel kell tölteni (a kép a fiókazonosítóhoz tartozik).
+
+## Használati statisztika
+
+- Gyűjtés (`js/track.js`): oldalanként a látható idő, megnyitások óránként, munkamenetek (30 perc szünet = új), műveletek (`track('generate')` stb.), JS hibák, készülék / app verzió. Jelszó, kód, MES adat nem.
+- A telefonon gyűlik, legfeljebb 2 percenként, illetve háttérbe tételkor egy batch-ben megy fel: `usage/{nap}_{uid}` (napi összesítő + idővonal, max. 400 bejegyzés) és `usageDaily/{nap}` (napi összesítő a trendhez). Csak admin olvashatja.
+- Megtekintés: Vezérlőpult → **📊 Használati statisztika** (Áttekintés / Modulok / Emberek / Eszközök). Ki/be: Vezérlőpult → **Adatgyűjtés**. 90 napnál régebbi adat törölhető.
+- Új művelet mérése egy modulban: `import { track } from './track.js'; track('muvelet', 'opcionális részlet');` – a felirat a `js/stats.js` `ACTIONS` listájába kerül.
 
 ## Súgó és visszajelzés
 
