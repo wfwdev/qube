@@ -87,6 +87,19 @@ const HELP = {
             <h6>Jó tudni</h6>
             <p>Az ünnepnapokat az app magától számolja (a húsvéthoz kötötteket is). A naptár internet nélkül is megnézhető.</p>`
     },
+    settings: {
+        title: '⚙️ Vezérlőpult',
+        html: `
+            <h6>Áttekintés</h6>
+            <p>Felül a legfontosabb számok: aktív felhasználók, összekapcsolásra váró fiókok és új visszajelzések. Ha valami teendőt jelez, piros keretet kap – koppintásra odaugrik.</p>
+            <h6>Funkciók</h6>
+            <ul>
+                <li>A kapcsolóval azonnal be- vagy kikapcsolhatod a funkciót <b>minden felhasználónál</b>.</li>
+                <li>A <b>›</b> jellel jelölt sorok részletes beállításokat nyitnak (pl. adventi üzenetek, munkanap-áthelyezések). Vissza a <b>‹</b> gombbal vagy a telefon vissza gombjával.</li>
+            </ul>
+            <h6>Biztonság</h6>
+            <p>Tarts mindig legalább pár fel nem használt <b>admin vészkódot</b> – ha elfogynak, a sor pirosan jelez.</p>`
+    },
     admin: {
         title: '👥 Felhasználók',
         html: `

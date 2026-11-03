@@ -1,12 +1,17 @@
 // ============================================================
-// Beállítások – csak admin (data-perm="admin.only")
-// A Firestore szabály is csak adminnak engedi a settings írását.
+// Vezérlőpult (Beállítások) – csak admin (data-perm="admin.only")
+// Áttekintő lista + aloldalak (#advent, #swaps, #recovery) – a telefon
+// "vissza" gombja is működik. A Firestore szabály is csak adminnak engedi
+// a settings írását.
 // ============================================================
 import { ready } from './session.js';
 import { loadSettings, saveAdvent, saveSwaps, saveAvatarsEnabled, DEFAULT_ADVENT_MESSAGES } from './features.js';
-import { BUILTIN_SWAPS, parseIso, fmtLong, dow } from './hu-calendar.js';
+import { BUILTIN_SWAPS, parseIso, fmtLong, fmtDay, dow, iso, today } from './hu-calendar.js';
 import { openAdvent, adventDay, adventTeaser, az } from './advent.js';
-import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
+import { esc, $, feedback, toast, openSheet, closeSheet } from './ui.js';
+import { registerHelp } from './help.js';
+import { APP } from './config.js';
+import { db, collection, query, where, getCountFromServer } from './firebase.js';
 import { countCodes, regenerateCodes } from './recovery.js';
 
 const session = await ready;
@@ -23,6 +28,8 @@ const snowChk = $('#advSnow');
 
 const renderStatus = () => {
     const day = adventDay();
+    $('#sumAdvent').textContent = !advent.enabled ? 'Kikapcsolva'
+        : day ? `Aktív – ${day}. ablak` : adventTeaser() ? 'Bekapcsolva – előzetes látszik' : 'Bekapcsolva – nov. 15-től látszik';
     $('#advStatus').textContent = !advent.enabled
         ? 'Kikapcsolva – a felhasználók nem látják.'
         : day ? `Most aktív: ${az(day)} ${day}. ablakig lehet nyitni.`
@@ -99,7 +106,6 @@ $('#advMsgs').addEventListener('click', (e) => {
     });
 });
 
-setPageTabs([{ id: 'settings', icon: '⚙️', label: 'Beállítások' }], () => {});
 renderStatus();
 renderMsgs();
 
@@ -111,7 +117,9 @@ const renderRecCount = async () => {
         const n = await countCodes(session.user.empId);
         $('#recCount').textContent = n;
         $('#recCount').classList.toggle('text-danger', n === 0);
-    } catch { $('#recCount').textContent = '–'; }
+        $('#sumRecovery').textContent = n ? `${n} fel nem használt kód` : '⚠️ Nincs kódod – generálj újakat!';
+        $('#sumRecovery').classList.toggle('text-danger', n === 0);
+    } catch { $('#recCount').textContent = '–'; $('#sumRecovery').textContent = 'Nem érhető el (internet?)'; }
 };
 
 $('#recGen').addEventListener('click', async (e) => {
@@ -150,6 +158,11 @@ let swapType = 'work';
 
 const renderSwaps = () => {
     const all = { ...BUILTIN_SWAPS, ...adminSwaps };
+    const tk = iso(today());
+    const next = Object.keys(all).filter((d) => d >= tk && all[d] !== 'none').sort()[0];
+    $('#sumSwaps').textContent = next
+        ? `Következő: ${fmtDay(parseIso(next))} – ${all[next] === 'work' ? 'ledolgozós' : 'pihenőnap'}`
+        : 'Nincs közelgő áthelyezés';
     const thisYear = new Date().getFullYear();
     const rows = Object.keys(all).filter((d) => Number(d.slice(0, 4)) >= thisYear - 1).sort();
     $('#swapList').innerHTML = rows.length ? rows.map((d) => {
@@ -212,11 +225,56 @@ renderSwaps();
 // PROFILKÉPEK be/ki
 // ============================================================
 const avChk = $('#avEnabled');
+const sumAvatars = () => { $('#sumAvatars').textContent = avChk.checked ? 'Feltölthetők' : 'Kikapcsolva – csak monogram'; };
 avChk.checked = initial.avatars.enabled;
+sumAvatars();
 avChk.addEventListener('change', async () => {
     feedback();
+    sumAvatars();
     try {
         await saveAvatarsEnabled(avChk.checked);
         feedback('success'); toast(avChk.checked ? 'Profilképek bekapcsolva' : 'Profilképek kikapcsolva', 'success');
-    } catch (e) { fail(e); avChk.checked = !avChk.checked; }
+    } catch (e) { fail(e); avChk.checked = !avChk.checked; sumAvatars(); }
 });
+
+// ============================================================
+// NAVIGÁCIÓ – áttekintés ↔ aloldalak (#advent, #swaps, #recovery)
+// ============================================================
+const VIEWS = ['home', 'advent', 'swaps', 'recovery'];
+const showView = () => {
+    const v = location.hash.slice(1);
+    const id = VIEWS.includes(v) ? v : 'home';
+    VIEWS.forEach((x) => $(`#view-${x}`).classList.toggle('hidden', x !== id));
+    window.scrollTo(0, 0);
+};
+window.addEventListener('hashchange', showView);
+
+let openedHere = false; // innen nyitottuk az aloldalt → a "vissza" előzményben lép vissza
+document.querySelectorAll('[data-open]').forEach((row) => row.addEventListener('click', (e) => {
+    if (e.target.closest('[data-stop]')) return; // a kapcsoló nem nyitja meg
+    feedback();
+    openedHere = true;
+    location.hash = row.dataset.open;
+}));
+document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => {
+    feedback();
+    if (openedHere) { openedHere = false; history.back(); } else location.hash = '';
+}));
+showView();
+
+// ============================================================
+// ÁTTEKINTÉS – számlálók (a szerveren számol, 1 olvasás / 1000 dokumentum)
+// ============================================================
+const count = async (q, el, alertBox) => {
+    try {
+        const n = (await getCountFromServer(q)).data().count;
+        $(el).textContent = n;
+        if (alertBox) $(alertBox).classList.toggle('alert', n > 0);
+    } catch (e) { console.warn(e); $(el).textContent = '–'; }
+};
+count(query(collection(db, 'users'), where('status', '==', 'active')), '#stUsers');
+count(query(collection(db, 'users'), where('status', '==', 'conflict')), '#stWait', '#stWaitBox');
+count(query(collection(db, 'feedback'), where('status', '==', 'new')), '#stFb', '#stFbBox');
+
+$('#cpVersion').textContent = `${APP.name} v${APP.version} · ${APP.build}`;
+registerHelp('settings');

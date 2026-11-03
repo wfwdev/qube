@@ -32,7 +32,7 @@ async function checkRolesSeeded() {
     } catch { /* nem kritikus */ }
 }
 
-const visible = MODULES.filter((m) => !m.perm || session.can(m.perm));
+const visible = MODULES.filter((m) => m.tile !== false && (!m.perm || session.can(m.perm)));
 $('#tiles').innerHTML = visible.length
     ? visible.map((m) => `
         <button class="dashboard-tile tile-${esc(m.color)} ${m.ready ? '' : 'tile-soon'}" data-id="${esc(m.id)}">

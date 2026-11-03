@@ -16,7 +16,7 @@ const isAdmin = session.isAdmin;
 
 let users = [];          // [{ id, ...data }]
 let roles = {};          // { roleId: { label, rank, permissions } }
-let filter = 'all';
+let filter = location.hash === '#varakozo' ? 'conflict' : 'all';
 let search = '';
 
 const STATUS = {

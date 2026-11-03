@@ -6,7 +6,7 @@
 export const APP = {
     name: 'Qube',
     tagline: 'Gyári kódok, egy helyen',
-    version: '2.10.0',
+    version: '2.11.0',
     build: 'dev'   // GitHub kiadáskor automatikusan a commit azonosítója kerül ide
 };
 
@@ -54,17 +54,18 @@ export const NEW_USER_ROLE = 'operator';
 // ------------------------------------------------------------
 // MODULOK – a kezdőlap csempéi ebből épülnek.
 // ready:false → "Hamarosan" csempe, nem kattintható.
+// tile:false → nincs csempe (az alsó menüből érhető el)
 // ------------------------------------------------------------
 export const MODULES = [
     { id: 'ic',   title: 'IC generátor',  desc: 'Nyersanyag azonosítók', icon: '⚡', color: 'orange', href: 'ic.html',   perm: 'ic.use',     ready: true },
     { id: 'mes',  title: 'MES terminál',  desc: 'Belépés QR-ral',        icon: '💻', color: 'blue',   href: 'mes.html',  perm: 'mes.use',    ready: true },
     { id: 'calendar', title: 'Munkaidő naptár', desc: 'Műszak, ünnepek, szabadság', icon: '📅', color: 'red', href: 'calendar.html', perm: null, ready: true },
     { id: 'pack', title: 'Csomagoló kód', desc: 'Csomagoló azonosítók',  icon: '📦', color: 'green',  href: 'pack.html', perm: 'pack.use',   ready: true },
-    { id: 'admin',title: 'Felhasználók',  desc: 'Szerepkörök, fiókok',   icon: '👥', color: 'purple', href: 'admin.html',perm: 'users.view', ready: true },
+    { id: 'admin',title: 'Felhasználók',  desc: 'Szerepkörök, fiókok',   icon: '👥', color: 'purple', href: 'admin.html',perm: 'users.view', ready: true, tile: false },
     // perm: null → mindenki látja
     { id: 'feedback', title: 'Visszajelzés', desc: 'Hiba vagy ötlet',      icon: '💬', color: 'teal',   href: 'feedback.html', perm: null, ready: true },
     // 'admin.only': nem szerepkör-jogosultság, ezért csak az admin látja (a szerepkörökhöz nem rendelhető)
-    { id: 'settings', title: 'Beállítások', desc: 'Funkciók ki/be',       icon: '⚙️', color: 'gray',   href: 'settings.html', perm: 'admin.only', ready: true }
+    { id: 'settings', title: 'Beállítások', desc: 'Funkciók ki/be',       icon: '⚙️', color: 'gray',   href: 'settings.html', perm: 'admin.only', ready: true, tile: false }
 ];
 
 // Törzsszám formátum: csak számjegyek, 3–10 karakter (igény szerint módosítható,

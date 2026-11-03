@@ -316,7 +316,7 @@ export const closeSideMenu = () => {
 };
 
 // ---------- Alsó menü ----------
-// Alap: Kezdőlap · Felhasználók (ha joga van) · Profil
+// Alap: Kezdőlap · Felhasználók (ha joga van) · Beállítások (admin) · Infó (kezdőlapon)
 // Egy oldal saját füleket tehet bele (setPageTabs) → Kezdőlap · fülek · Profil
 let pageTabs = null;     // [{ id, icon, label }]
 let helpAction = null;   // ha be van állítva: ❓ Súgó gomb a jobb szélen
@@ -332,7 +332,12 @@ const renderNav = () => {
     const onHome = page === 'home';
     const items = (pageTabs
         ? [home, ...pageTabs.map((t) => ({ ...t, tab: true }))]
-        : [home, sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' }, onHome && info]
+        : [
+            home,
+            sessionRef.can('users.view') && { id: 'admin', icon: '👥', label: 'Felhasználók', go: 'admin.html' },
+            sessionRef.isAdmin && { id: 'settings', icon: '⚙️', label: 'Beállítások', go: 'settings.html' },
+            onHome && info
+        ]
     ).filter(Boolean);
     if (helpAction) items.push({ id: 'help', icon: '❓', label: 'Súgó', action: helpAction });
 
