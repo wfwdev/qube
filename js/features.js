@@ -60,13 +60,20 @@ const merge = (data) => {
         // Munkanap-áthelyezések admin kiegészítése: 'work' | 'rest' | 'none' (beépített törlése)
         calendar: { swaps: cleanSwaps(data?.calendar?.swapList) },
         // Profilképek: alapból bekapcsolva; kikapcsolva csak monogram látszik és nem lehet feltölteni
-        avatars: { enabled: data?.avatars?.enabled !== false }
+        avatars: { enabled: data?.avatars?.enabled !== false },
+        // Használati statisztika gyűjtése (Statisztika oldal); alapból be
+        analytics: { enabled: data?.analytics?.enabled !== false }
     };
 };
 
 // Admin: profilképek be/ki
 export const saveAvatarsEnabled = async (enabled) => {
     await setDoc(doc(db, 'settings', 'app'), { avatars: { enabled: !!enabled } }, { merge: true });
+};
+
+// Admin: használati statisztika be/ki
+export const saveAnalyticsEnabled = async (enabled) => {
+    await setDoc(doc(db, 'settings', 'app'), { analytics: { enabled: !!enabled } }, { merge: true });
 };
 
 // Admin: munkanap-áthelyezések mentése (a teljes admin lista)

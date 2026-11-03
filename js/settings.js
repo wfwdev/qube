@@ -5,7 +5,7 @@
 // a settings írását.
 // ============================================================
 import { ready } from './session.js';
-import { loadSettings, saveAdvent, saveSwaps, saveAvatarsEnabled, DEFAULT_ADVENT_MESSAGES } from './features.js';
+import { loadSettings, saveAdvent, saveSwaps, saveAvatarsEnabled, saveAnalyticsEnabled, DEFAULT_ADVENT_MESSAGES } from './features.js';
 import { BUILTIN_SWAPS, parseIso, fmtLong, fmtDay, dow, iso, today } from './hu-calendar.js';
 import { openAdvent, adventDay, adventTeaser, az } from './advent.js';
 import { esc, $, feedback, toast, openSheet, closeSheet } from './ui.js';
@@ -235,6 +235,22 @@ avChk.addEventListener('change', async () => {
         await saveAvatarsEnabled(avChk.checked);
         feedback('success'); toast(avChk.checked ? 'Profilképek bekapcsolva' : 'Profilképek kikapcsolva', 'success');
     } catch (e) { fail(e); avChk.checked = !avChk.checked; sumAvatars(); }
+});
+
+// ============================================================
+// HASZNÁLATI STATISZTIKA – gyűjtés be/ki
+// ============================================================
+const anChk = $('#anEnabled');
+const sumAnalytics = () => { $('#sumAnalytics').textContent = anChk.checked ? 'Gyűjt – csak te látod' : 'Kikapcsolva – nem gyűjt adatot'; };
+anChk.checked = initial.analytics.enabled;
+sumAnalytics();
+anChk.addEventListener('change', async () => {
+    feedback();
+    sumAnalytics();
+    try {
+        await saveAnalyticsEnabled(anChk.checked);
+        feedback('success'); toast(anChk.checked ? 'Adatgyűjtés bekapcsolva' : 'Adatgyűjtés kikapcsolva', 'success');
+    } catch (e) { fail(e); anChk.checked = !anChk.checked; sumAnalytics(); }
 });
 
 // ============================================================

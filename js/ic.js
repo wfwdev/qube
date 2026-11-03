@@ -15,6 +15,7 @@ import {
 import { IC } from './config.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs } from './ui.js';
 import { registerHelp } from './help.js';
+import { track } from './track.js';
 
 const session = await ready;
 const canManage = session.can('ic.manage');
@@ -139,6 +140,7 @@ $('#genBtn').addEventListener('click', () => {
     renderLastGen();
     showQr(last);
     feedback('success');
+    track('generate', `${clean} ×${amount}`);
 
     enqueue({
         id: uuid(),
@@ -197,6 +199,7 @@ $('#lastGen').addEventListener('click', () => {
     if (!g?.qr1 || typeof QRCode === 'undefined') return;
     feedback();
     showQr(g, true);
+    track('replay');
 });
 
 // ============================================================

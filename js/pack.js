@@ -7,6 +7,7 @@
 import { ready } from './session.js';
 import { $, feedback, toast, setPageTabs } from './ui.js';
 import { registerHelp } from './help.js';
+import { track } from './track.js';
 
 const session = await ready;
 
@@ -98,6 +99,7 @@ const showQr = async () => {
     if (typeof QRCode === 'undefined') { feedback('error'); return toast('A QR modul nem töltődött be. Frissíts!', 'error'); }
 
     feedback('success');
+    track('qr');
     $('#packQr').innerHTML = '';
     new QRCode($('#packQr'), { text: d.code, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
     $('#packQrText').textContent = d.code;

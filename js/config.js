@@ -6,7 +6,7 @@
 export const APP = {
     name: 'Qube',
     tagline: 'Gyári kódok, egy helyen',
-    version: '2.11.0',
+    version: '2.12.0',
     build: 'dev'   // GitHub kiadáskor automatikusan a commit azonosítója kerül ide
 };
 
@@ -65,6 +65,7 @@ export const MODULES = [
     // perm: null → mindenki látja
     { id: 'feedback', title: 'Visszajelzés', desc: 'Hiba vagy ötlet',      icon: '💬', color: 'teal',   href: 'feedback.html', perm: null, ready: true },
     // 'admin.only': nem szerepkör-jogosultság, ezért csak az admin látja (a szerepkörökhöz nem rendelhető)
+    { id: 'stats', title: 'Statisztika', desc: 'Használati adatok', icon: '📊', color: 'gray', href: 'stats.html', perm: 'admin.only', ready: true, tile: false },
     { id: 'settings', title: 'Beállítások', desc: 'Funkciók ki/be',       icon: '⚙️', color: 'gray',   href: 'settings.html', perm: 'admin.only', ready: true, tile: false }
 ];
 

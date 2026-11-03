@@ -100,6 +100,23 @@ const HELP = {
             <h6>Biztonság</h6>
             <p>Tarts mindig legalább pár fel nem használt <b>admin vészkódot</b> – ha elfogynak, a sor pirosan jelez.</p>`
     },
+    stats: {
+        title: '📊 Statisztika',
+        html: `
+            <h6>Időszak</h6>
+            <p>Felül: <b>Ma</b>, <b>7 nap</b> vagy <b>30 nap</b>. A <b>Saját használat nélkül</b> kihagyja a te adataidat (fejlesztés közbeni tesztelés ne torzítson). A 30 napos trend mindig mindenkit tartalmaz.</p>
+            <h6>Fülek</h6>
+            <ul>
+                <li><b>Áttekintés:</b> aktív felhasználók, munkamenetek, használati idő, napszakok, műveletek és az app JS hibái (melyik oldalon, kinél, mikor).</li>
+                <li><b>Modulok:</b> melyik modult mennyi ideig, hányszor és hányan használták.</li>
+                <li><b>Emberek:</b> felhasználónként; koppintásra részletes idővonal (mikor mit nyitott meg, mennyi ideig, mit csinált).</li>
+                <li><b>Eszközök:</b> app verziók (a „régi” jelzés mutatja, ki nem frissített), telepített app vagy böngésző, rendszer, böngésző.</li>
+            </ul>
+            <h6>Hogyan mér?</h6>
+            <p>Az idő csak akkor számít, amíg az oldal a képernyőn van. Az adatok a telefonon gyűlnek, és legfeljebb 2 percenként, illetve az app háttérbe tételekor mennek fel – ezért a legfrissebb pár perc még hiányozhat. 30 perc szünet után új munkamenet kezdődik.</p>
+            <h6>Kikapcsolás, törlés</h6>
+            <p>A gyűjtés a <b>Vezérlőpulton</b> kikapcsolható. A 90 napnál régebbi adatok az Áttekintés alján törölhetők.</p>`
+    },
     admin: {
         title: '👥 Felhasználók',
         html: `

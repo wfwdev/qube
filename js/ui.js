@@ -378,6 +378,8 @@ export const setHelp = (fn) => { helpAction = fn; renderNav(); };
 
 export const renderChrome = (session) => {
     sessionRef = session;
+    // Használati statisztika (csak bejelentkezett felhasználónál)
+    if (session?.uid) import('./track.js').then((m) => m.startTracking(session)).catch(() => {});
     renderNav();
     requestWakeLock();
 };

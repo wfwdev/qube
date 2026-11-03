@@ -12,6 +12,7 @@ import { cachedSettings, loadSettings } from './features.js';
 import { esc, $, feedback, toast, openSheet, closeSheet, setPageTabs, selectPageTab } from './ui.js';
 import { registerHelp } from './help.js';
 import { avatar } from './avatar.js';
+import { track } from './track.js';
 import {
     BUILTIN_SWAPS, MONTHS, DAYS_SHORT, SHIFTS, ORDERS,
     iso, parseIso, addDays, today, dow, mondayOf, fmtDay, fmtLong,
@@ -190,6 +191,7 @@ const toggleLeave = async (k) => {
     try {
         await setDoc(doc(db, 'leave', uid), { uid, name: session.user.name, days: list, updatedAt: serverTimestamp() });
         feedback('success');
+        track(adding ? 'leave-add' : 'leave-remove', k);
         toast(adding ? 'Szabadság bejelölve 🏖️' : 'Szabadság törölve', 'success');
     } catch (e) {
         console.error(e);
@@ -262,6 +264,7 @@ $('#qEdit').addEventListener('click', () => {
 $('#shOrder').innerHTML = Object.entries(ORDERS).map(([k, o]) => `<option value="${k}">${esc(o.label)}</option>`).join('');
 
 const saveShift = (cfg) => {
+    track('shift', cfg?.mode || '');
     shiftCfg = cfg;
     if (cfg) store(SHIFT_KEY, cfg); else localStorage.removeItem(SHIFT_KEY);
     renderAll();

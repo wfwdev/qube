@@ -6,6 +6,7 @@
 // ============================================================
 import { db, doc, getDoc, setDoc, serverTimestamp } from './firebase.js';
 import { APP } from './config.js';
+import { track } from './track.js';
 
 const OUTBOX = 'qube_fb_outbox';
 const MAX_ATTEMPTS = 6;
@@ -44,6 +45,7 @@ export const queueFeedback = (session, { type, module, text }) => {
         attempts: 0
     };
     store([...load(), item]);
+    track('send', type);
     return item;
 };
 
