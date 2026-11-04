@@ -143,6 +143,22 @@ const renderAll = () => {
         : '<div class="text-center text-muted small py-4">Nincs ilyen bejelentés.</div>';
 };
 
+// Hibabejelentéshez csatolt diagnosztika (js/track.js diagnostics())
+const diagHtml = (d) => {
+    const sy = d.sync || {};
+    const warn = (sy.ic || sy.fb) ? `<span class="text-danger">⏳ feltöltésre vár: ${sy.ic || 0} IC napló, ${sy.fb || 0} visszajelzés (legrégebbi ${sy.oldestMin || 0} perce)</span>` : '✓ nincs feltöltésre váró adat';
+    return `
+    <details class="fb-diag mb-3">
+        <summary>🩺 Diagnosztika (beküldéskor)</summary>
+        <div class="tiny mt-2">
+            ${esc(d.device || '')} · v${esc(d.version || '')}<br>
+            ${d.online ? '📶 online' : '📴 offline'} · ${sy.sw ? 'service worker aktív' : 'service worker NEM aktív'} · oldal: ${esc(d.page || '')}<br>
+            ${warn}
+        </div>
+        <div class="fb-diag-log mono">${(d.recent || []).map((l) => `<div>${esc(l)}</div>`).join('') || '<div>Nincs korábbi esemény.</div>'}</div>
+    </details>`;
+};
+
 const openItem = (id) => {
     const f = all.find((x) => x.id === id);
     if (!f) return;
@@ -153,6 +169,7 @@ const openItem = (id) => {
         <div class="text-muted small mb-3">${esc(f.name)} (${esc(f.empId)}) · ${fmtTime(timeOf(f))}</div>
         <div class="fb-full mb-3">${esc(f.text)}</div>
         <div class="text-muted tiny mb-3">Verzió: ${esc(f.version || '–')}<br>Eszköz: ${esc(f.device || '–')}</div>
+        ${f.diag ? diagHtml(f.diag) : ''}
         <label class="form-label">Állapot</label>
         <select id="fbStatus" class="form-select mb-3">${Object.entries(STATUS).map(([k, v]) =>
             `<option value="${k}" ${f.status === k ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>

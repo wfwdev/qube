@@ -46,8 +46,18 @@ const ACTIONS = {
     'pack:qr': '📦 Csomagoló QR',
     'calendar:leave-add': '🏖️ Szabadság bejelölés',
     'calendar:leave-remove': '🏖️ Szabadság törlés',
-    'calendar:shift': '🔄 Műszak beállítás'
+    'calendar:shift': '🔄 Műszak beállítás',
+    'app:update-shown': '🔄 Frissítés gomb megjelent',
+    'app:update-click': '🔄 Frissítés gomb megnyomva'
 };
+// Folyamatok: megnyitotta a modult → elvégezte a fő műveletet
+const FUNNELS = [
+    ['ic', 'ic:generate', 'IC generátor → generálás'],
+    ['mes', 'mes:qr', 'MES terminál → belépő QR'],
+    ['pack', 'pack:qr', 'Csomagoló kód → QR'],
+    ['calendar', 'calendar:leave-add', 'Naptár → szabadság bejelölés']
+];
+const ERR_SEEN_KEY = 'qube_err_seen';
 const actionTitle = (k) => ACTIONS[k] || (k.endsWith(':send') ? '💬 Visszajelzés küldés' : k);
 
 // ---------- Adatok ----------
@@ -56,6 +66,16 @@ let noSelf = false;
 let search = '';
 const cache = new Map();   // range → usage dokumentumok
 let daily = null;          // 30 nap usageDaily
+let people = null;         // users kollekció (ki nem használta)
+
+const loadPeople = async () => {
+    if (people) return people;
+    try {
+        const snap = await getDocs(collection(db, 'users'));
+        people = snap.docs.map((d) => ({ uid: d.id, ...d.data() })).filter((u) => u.status === 'active');
+    } catch { people = []; }
+    return people;
+};
 
 const loadRange = async (n) => {
     if (cache.has(n)) return cache.get(n);
@@ -89,9 +109,16 @@ const parseLog = (log) => {
         } else if (val === '▶') out.push({ time, page, kind: 'start' });
         else if (val.startsWith('@')) out.push({ time, page, kind: 'action', text: val.slice(1) });
         else if (val.startsWith('!')) out.push({ time, page, kind: 'error', text: val.slice(1) });
+        else if (val.startsWith('⚠')) out.push({ time, page, kind: 'warn', text: val.slice(1) });
+        else if (val === '📴') out.push({ time, page, kind: 'net', text: '📴 Megszakadt az internet' });
+        else if (val.startsWith('📶')) out.push({ time, page, kind: 'net', text: `📶 Újra online (${fmtDur(Number(val.slice(2)) * 1000)} után)` });
+        else if (val.startsWith('🐢')) out.push({ time, page, kind: 'slow', text: `🐢 Lassú betöltés: ${val.slice(2).trim()} mp` });
     });
     return out.sort((a, b) => a.time.localeCompare(b.time));
 };
+
+// Azonos hibák egy csoportba: a számok, azonosítók nem számítanak
+const normMsg = (t) => String(t).replace(/\d+/g, '#').replace(/'[^']*'|"[^"]*"/g, '…').trim();
 
 // Összesítés a kiválasztott időszakra
 const aggregate = (docs) => {
@@ -99,12 +126,14 @@ const aggregate = (docs) => {
     const modules = {};
     const actions = {};
     const hours = {};
-    const errors = [];
-    let sessions = 0, time = 0, errCount = 0;
+    const groups = { error: new Map(), warn: new Map() };
+    const funnels = Object.fromEntries(FUNNELS.map(([m]) => [m, { opened: 0, done: 0, idle: new Set() }]));
+    const perfOs = {};
+    let sessions = 0, time = 0, errCount = 0, warnCount = 0, offCount = 0, offMs = 0, perfN = 0, perfMs = 0;
 
     docs.forEach((d) => {
         if (noSelf && d.uid === session.uid) return;
-        const u = users.get(d.uid) || { uid: d.uid, name: d.name, days: [], time: 0, sessions: 0, views: 0, modules: {}, actions: {}, errors: 0, device: null, deviceDay: '', last: 0 };
+        const u = users.get(d.uid) || { uid: d.uid, name: d.name, days: [], time: 0, sessions: 0, views: 0, modules: {}, actions: {}, errors: 0, warns: 0, off: 0, offMs: 0, perfN: 0, perfMs: 0, device: null, sync: null, deviceDay: '', last: 0 };
         users.set(d.uid, u);
         u.name = d.name || u.name;
         u.days.push(d);
@@ -114,23 +143,56 @@ const aggregate = (docs) => {
             u.views += v.views || 0;
             const um = (u.modules[m] ||= { views: 0, ms: 0 });
             um.views += v.views || 0; um.ms += v.ms || 0;
-            const gm = (modules[m] ||= { views: 0, ms: 0, users: new Set() });
+            const gm = (modules[m] ||= { views: 0, ms: 0, users: new Set(), perfN: 0, perfMs: 0 });
             gm.views += v.views || 0; gm.ms += v.ms || 0; gm.users.add(d.uid);
+        });
+        Object.entries(d.perf || {}).forEach(([m, v]) => {
+            const gm = (modules[m] ||= { views: 0, ms: 0, users: new Set(), perfN: 0, perfMs: 0 });
+            gm.perfN += v.n || 0; gm.perfMs += v.ms || 0;
+            u.perfN += v.n || 0; u.perfMs += v.ms || 0;
+            perfN += v.n || 0; perfMs += v.ms || 0;
+            const os = d.device?.os || '?';
+            const po = (perfOs[os] ||= { n: 0, ms: 0 });
+            po.n += v.n || 0; po.ms += v.ms || 0;
         });
         add(u.actions, d.actions);
         add(actions, d.actions);
         add(hours, d.hours);
-        const ec = sum(d.errors);
+        const ec = sum(d.errors), wc = sum(d.warnings);
         u.errors += ec; errCount += ec;
+        u.warns += wc; warnCount += wc;
+        u.off += d.net?.off || 0; u.offMs += d.net?.offMs || 0;
+        offCount += d.net?.off || 0; offMs += d.net?.offMs || 0;
         sessions += d.sessions || 0;
         time += d.time || 0;
-        if (d.day >= u.deviceDay) { u.device = d.device; u.deviceDay = d.day; }
+        if (d.day >= u.deviceDay) { u.device = d.device; u.sync = d.sync; u.deviceDay = d.day; }
         const lastMs = d.last?.toMillis ? d.last.toMillis() : 0;
         if (lastMs > u.last) u.last = lastMs;
-        parseLog(d.log).filter((e) => e.kind === 'error').forEach((e) => errors.push({ ...e, day: d.day, name: d.name }));
+
+        FUNNELS.forEach(([m, a]) => {
+            if (!d.modules?.[m]?.views) return;
+            const f = funnels[m];
+            f.opened++;
+            if (d.actions?.[a]) f.done++; else f.idle.add(d.name || '?');
+        });
+
+        parseLog(d.log).filter((e) => e.kind === 'error' || e.kind === 'warn').forEach((e) => {
+            const key = `${e.page}|${normMsg(e.text)}`;
+            const g = groups[e.kind].get(key) || { text: e.text, page: e.page, count: 0, users: new Set(), last: '', items: [] };
+            g.count++;
+            g.users.add(d.name || '?');
+            const at = `${d.day} ${e.time}`;
+            if (at > g.last) { g.last = at; g.text = e.text; }
+            g.items.push({ at, name: d.name || '?', text: e.text });
+            groups[e.kind].set(key, g);
+        });
     });
-    errors.sort((a, b) => (b.day + b.time).localeCompare(a.day + a.time));
-    return { users: [...users.values()], modules, actions, hours, errors, sessions, time, errCount };
+    const sortG = (m) => [...m.values()].sort((a, b) => b.last.localeCompare(a.last));
+    return {
+        users: [...users.values()], modules, actions, hours, sessions, time,
+        errCount, warnCount, offCount, offMs, perfN, perfMs, perfOs, funnels,
+        errGroups: sortG(groups.error), warnGroups: sortG(groups.warn)
+    };
 };
 
 // ---------- Kirajzolás ----------
@@ -152,7 +214,10 @@ const renderOverview = (A) => {
         ['⏱️', fmtDur(A.time), 'összes használat'],
         ['📈', fmtDur(perUserDay ? A.time / perUserDay : 0), 'átlag / fő / nap'],
         ['⚡', num(sum(A.actions)), 'művelet'],
-        ['🐞', num(A.errCount), 'JS hiba', A.errCount > 0]
+        ['🚀', A.perfN ? `${(A.perfMs / A.perfN / 1000).toFixed(1)} mp` : '–', 'átl. betöltés', A.perfN && A.perfMs / A.perfN > 4000],
+        ['🐞', num(A.errCount), 'JS hiba', A.errCount > 0],
+        ['⚠️', num(A.warnCount), 'hibaüzenet', A.warnCount > 0],
+        ['📴', num(A.offCount), `offline (${fmtDur(A.offMs)})`]
     ].map(([i, v, l, alert]) => `<div class="st-kpi ${alert ? 'alert' : ''}"><span class="st-kpi-ico">${i}</span><b>${esc(v)}</b><small>${esc(l)}</small></div>`).join('');
 
     // Napszakok
@@ -164,11 +229,40 @@ const renderOverview = (A) => {
 
     $('#actions').innerHTML = bars(Object.entries(A.actions).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: esc(actionTitle(k)), value: v })));
 
-    $('#errors').innerHTML = A.errors.length ? A.errors.slice(0, 30).map((e) => `
-        <div class="st-err">
-            <div class="text-muted tiny">${esc(fmtDayKey(e.day))} ${esc(e.time)} · ${esc(e.name || '?')} · ${esc(pageTitle(e.page))}</div>
-            <div class="mono small">${esc(e.text)}</div>
-        </div>`).join('') : '<div class="text-muted small p-2">Nem volt hiba ebben az időszakban. 🎉</div>';
+    $('#errors').innerHTML = groupList(A.errGroups, 'error', 'Nem volt JS hiba ebben az időszakban. 🎉');
+    $('#warnings').innerHTML = groupList(A.warnGroups, 'warn', 'Nem kapott senki hibaüzenetet. 🎉');
+};
+
+// Csoportosított hibák: üzenet · hányszor · hány embernél · mikor utoljára
+let groupCache = { error: [], warn: [] };
+const groupList = (list, kind, empty) => {
+    groupCache[kind] = list;
+    return list.length ? list.slice(0, 40).map((g, i) => `
+        <button class="st-err st-grp" data-g="${kind}:${i}">
+            <div class="d-flex justify-content-between gap-2">
+                <span class="mono small ${kind === 'warn' ? 'st-warn' : ''}">${esc(g.text)}</span>
+                <span class="st-cnt">${g.count}×</span>
+            </div>
+            <div class="text-muted tiny">${esc(pageTitle(g.page))} · ${g.users.size} fő · utoljára ${esc(fmtDayKey(g.last.slice(0, 10)))} ${esc(g.last.slice(11, 16))}</div>
+        </button>`).join('') : `<div class="text-muted small p-2">${empty}</div>`;
+};
+
+const openGroup = (key) => {
+    const [kind, i] = key.split(':');
+    const g = groupCache[kind]?.[Number(i)];
+    if (!g) return;
+    feedback();
+    const items = [...g.items].sort((a, b) => b.at.localeCompare(a.at));
+    const sheet = openSheet(`
+        <h5 class="fw-bold mb-1">${kind === 'warn' ? '⚠️ Hibaüzenet' : '🐞 JS hiba'}</h5>
+        <div class="mono small mb-2 ${kind === 'warn' ? 'st-warn' : 'text-danger'}">${esc(g.text)}</div>
+        <div class="text-muted small mb-3">${esc(pageTitle(g.page))} · ${g.count}× · ${g.users.size} fő: ${esc([...g.users].join(', '))}</div>
+        <h6 class="cp-group mt-0">Előfordulások</h6>
+        <div class="minimal-card p-2 mb-3">${items.slice(0, 60).map((x) => `
+            <div class="st-err"><div class="text-muted tiny">${esc(fmtDayKey(x.at.slice(0, 10)))} ${esc(x.at.slice(11))} · ${esc(x.name)}</div>
+            ${x.text !== g.text ? `<div class="mono tiny">${esc(x.text)}</div>` : ''}</div>`).join('')}</div>
+        <button class="btn btn-light w-100" id="grpClose">Bezárás</button>`);
+    $('#grpClose', sheet).addEventListener('click', closeSheet);
 };
 
 const renderTrend = (D) => {
@@ -189,8 +283,19 @@ const renderModules = (A) => {
     $('#modules').innerHTML = rows.length ? bars(rows.map(([m, v]) => ({
         label: esc(pageTitle(m)),
         value: v.ms,
-        sub: `${num(v.views)} megnyitás · ${v.users.size} fő · ⌀ ${fmtDur(v.views ? v.ms / v.views : 0)}`
+        sub: `${num(v.views)} megnyitás · ${v.users.size}${people?.length ? `/${people.length}` : ''} fő · ⌀ ${fmtDur(v.views ? v.ms / v.views : 0)}${v.perfN ? ` · betöltés ${(v.perfMs / v.perfN / 1000).toFixed(1)} mp` : ''}`
     })), { fmt: fmtDur }) : '<div class="text-muted small p-2">Nincs adat.</div>';
+
+    $('#funnels').innerHTML = FUNNELS.map(([m, , label]) => {
+        const f = A.funnels[m];
+        const pct = f.opened ? Math.round(f.done / f.opened * 100) : 0;
+        return `
+        <div class="st-row">
+            <div class="st-row-top"><span class="st-row-lbl">${esc(label)}</span><span class="st-row-val">${f.opened ? `${pct}%` : '–'}<small>${f.done}/${f.opened} alkalom</small></span></div>
+            <div class="bar"><span style="width:${pct}%"></span></div>
+            ${f.idle.size ? `<div class="text-muted tiny mt-1">Megnyitotta, de nem csinálta meg: ${esc([...f.idle].slice(0, 8).join(', '))}${f.idle.size > 8 ? ` +${f.idle.size - 8}` : ''}</div>` : ''}
+        </div>`;
+    }).join('');
 };
 
 const lastSeen = (ms) => {
@@ -220,6 +325,21 @@ const renderUsers = (A) => {
             </div>
         </button>`;
     }).join('') : '<div class="text-muted small p-2">Nincs adat.</div>';
+
+    // Akik ebben az időszakban nem nyitották meg (aktív fiókok közül)
+    const used = new Set(A.users.map((u) => u.uid));
+    const idle = (people || []).filter((p) => !used.has(p.uid) && !(noSelf && p.uid === session.uid)
+        && (!q || (p.name || '').toLowerCase().includes(q)))
+        .sort((a, b) => (b.lastActive?.toMillis?.() || 0) - (a.lastActive?.toMillis?.() || 0));
+    $('#inactiveTitle').textContent = `Nem használta ebben az időszakban (${idle.length})`;
+    $('#inactive').innerHTML = idle.length ? idle.map((p) => `
+        <div class="user-row">
+            ${avatar(p.uid, p.name, 'sm')}
+            <div class="flex-grow-1" style="min-width:0">
+                <div class="fw-bold text-truncate">${esc(p.name || '?')}</div>
+                <div class="text-muted tiny">Utoljára aktív: ${esc(lastSeen(p.lastActive?.toMillis?.() || 0) || 'soha')}</div>
+            </div>
+        </div>`).join('') : '<div class="text-muted small p-2">Mindenki használta. 👍</div>';
 };
 
 const openUser = (uid) => {
@@ -239,7 +359,9 @@ const openUser = (uid) => {
                     <span class="st-ev-t">${esc(e.time.slice(0, 5))}</span>
                     <span class="st-ev-x">${e.kind === 'start' ? '▶ Megnyitotta az appot'
                         : e.kind === 'view' ? `${esc(pageTitle(e.page))} <small>${esc(fmtDur(e.secs * 1000))}</small>`
-                        : e.kind === 'action' ? `${esc(actionTitle(`${e.page}:${e.text.split(' ')[0]}`))} <small>${esc(e.text.split(' ').slice(1).join(' '))}</small>`
+                        : e.kind === 'action' ? `${esc(actionTitle(e.text.startsWith('app:') ? e.text.split(' ')[0] : `${e.page}:${e.text.split(' ')[0]}`))} <small>${esc(e.text.split(' ').slice(1).join(' '))}</small>`
+                        : e.kind === 'warn' ? `⚠️ <span class="st-warn">${esc(e.text)}</span> <small>${esc(pageTitle(e.page))}</small>`
+                        : e.kind === 'net' || e.kind === 'slow' ? `${esc(e.text)} <small>${esc(pageTitle(e.page))}</small>`
                         : `🐞 <span class="mono">${esc(e.text)}</span> <small>${esc(pageTitle(e.page))}</small>`}</span>
                 </div>`).join('') : '<div class="text-muted small">Nincs részletes idővonal.</div>'}
             </div>
@@ -258,7 +380,12 @@ const openUser = (uid) => {
             <div class="st-kpi"><b>${esc(fmtDur(u.time))}</b><small>használat</small></div>
             <div class="st-kpi"><b>${u.sessions}</b><small>munkamenet</small></div>
             <div class="st-kpi"><b>${u.days.length}</b><small>nap</small></div>
+            <div class="st-kpi ${u.errors ? 'alert' : ''}"><b>${u.errors}</b><small>JS hiba</small></div>
+            <div class="st-kpi ${u.warns ? 'alert' : ''}"><b>${u.warns}</b><small>hibaüzenet</small></div>
+            <div class="st-kpi"><b>${u.perfN ? `${(u.perfMs / u.perfN / 1000).toFixed(1)} mp` : '–'}</b><small>átl. betöltés</small></div>
         </div>
+        ${u.off ? `<div class="small mb-3">📴 ${u.off}× volt offline, összesen ${esc(fmtDur(u.offMs))}</div>` : ''}
+        ${u.sync && (u.sync.ic || u.sync.fb) ? `<div class="info-warn small mb-3">⏳ Feltöltésre vár: ${u.sync.ic || 0} IC napló, ${u.sync.fb || 0} visszajelzés (legrégebbi ${u.sync.oldestMin} perce)</div>` : ''}
         <h6 class="cp-group mt-0">Modulok</h6>
         <div class="mb-3">${bars(mods.map(([m, v]) => ({ label: esc(pageTitle(m)), value: v.ms, sub: `${v.views}×` })), { fmt: fmtDur })}</div>
         ${Object.keys(u.actions).length ? `<h6 class="cp-group">Műveletek</h6><div class="mb-3">${bars(Object.entries(u.actions).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: esc(actionTitle(k)), value: v })))}</div>` : ''}
@@ -298,12 +425,33 @@ const renderDevices = (A) => {
     $('#pwa').innerHTML = share('', c.pwa);
     $('#os').innerHTML = share('', c.os);
     $('#browsers').innerHTML = share('', c.br);
+
+    // Régi verzión maradtak
+    const old = A.users.filter((u) => u.device?.version && u.device.version !== APP.version)
+        .sort((a, b) => a.device.version.localeCompare(b.device.version));
+    $('#outdated').innerHTML = old.length ? old.map((u) => `
+        <div class="user-row">${avatar(u.uid, u.name, 'xs')}<div class="flex-grow-1 small fw-bold">${esc(u.name || '?')}</div>
+        <span class="st-errbadge">v${esc(u.device.version)}</span><span class="text-muted tiny">${esc(lastSeen(u.last))}</span></div>`).join('')
+        : `<div class="text-muted small p-2">Mindenki a legfrissebbet (v${esc(APP.version)}) használja. 👍</div>`;
+
+    // Feltöltésre váró (beragadt) adatok
+    const stuck = A.users.filter((u) => u.sync && (u.sync.ic || u.sync.fb)).sort((a, b) => (b.sync.oldestMin || 0) - (a.sync.oldestMin || 0));
+    $('#sync').innerHTML = stuck.length ? stuck.map((u) => `
+        <div class="user-row">${avatar(u.uid, u.name, 'xs')}<div class="flex-grow-1 small"><b>${esc(u.name || '?')}</b><br>
+        <span class="text-muted tiny">${u.sync.ic || 0} IC napló · ${u.sync.fb || 0} visszajelzés · legrégebbi ${esc(fmtDur((u.sync.oldestMin || 0) * 60000))}</span></div>
+        ${u.sync.sw ? '' : '<span class="st-errbadge">SW nincs</span>'}</div>`).join('')
+        : '<div class="text-muted small p-2">Nincs beragadt adat. 👍</div>';
+
+    // Betöltési idő rendszerenként
+    $('#perfOs').innerHTML = bars(Object.entries(A.perfOs).map(([os, v]) => ({ label: esc(os), value: v.n ? v.ms / v.n : 0, sub: `${v.n} betöltés` })),
+        { fmt: (ms) => `${(ms / 1000).toFixed(1)} mp` });
 };
 
 const renderAll = async () => {
     $('#stLoading').classList.remove('hidden');
     try {
-        const [docs, D] = await Promise.all([loadRange(range), loadDaily()]);
+        const [docs, D] = await Promise.all([loadRange(range), loadDaily(), loadPeople()]);
+        markSeen(D);
         lastAgg = aggregate(docs);
         renderOverview(lastAgg);
         renderTrend(D);
@@ -314,6 +462,13 @@ const renderAll = async () => {
         console.error(e);
         toast(navigator.onLine ? 'Nem sikerült betölteni.' : 'A statisztikához internet kell.', 'error');
     } finally { $('#stLoading').classList.add('hidden'); }
+};
+
+// A Vezérlőpult "új hiba" jelzéséhez: amit itt láttál, az már nem új
+const markSeen = (D) => {
+    const seen = {};
+    D.slice(-7).forEach((x) => { seen[x.day] = sum(x.data?.errors) + sum(x.data?.warnings); });
+    try { localStorage.setItem(ERR_SEEN_KEY, JSON.stringify(seen)); } catch { /* */ }
 };
 
 // ---------- Események ----------
@@ -327,6 +482,7 @@ $('#stRange').addEventListener('click', (e) => {
 });
 $('#stNoSelf').addEventListener('change', (e) => { noSelf = e.target.checked; feedback(); renderAll(); });
 $('#stSearch').addEventListener('input', (e) => { search = e.target.value.trim(); if (lastAgg) renderUsers(lastAgg); });
+document.addEventListener('click', (e) => { const g = e.target.closest('[data-g]'); if (g) openGroup(g.dataset.g); });
 $('#users').addEventListener('click', (e) => { const r = e.target.closest('[data-uid]'); if (r) openUser(r.dataset.uid); });
 
 $('#stCleanup').addEventListener('click', async (e) => {

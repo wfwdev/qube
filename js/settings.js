@@ -11,7 +11,7 @@ import { openAdvent, adventDay, adventTeaser, az } from './advent.js';
 import { esc, $, feedback, toast, openSheet, closeSheet } from './ui.js';
 import { registerHelp } from './help.js';
 import { APP } from './config.js';
-import { db, collection, query, where, getCountFromServer } from './firebase.js';
+import { db, collection, doc, getDoc, query, where, getCountFromServer } from './firebase.js';
 import { countCodes, regenerateCodes } from './recovery.js';
 
 const session = await ready;
@@ -291,6 +291,26 @@ const count = async (q, el, alertBox) => {
 count(query(collection(db, 'users'), where('status', '==', 'active')), '#stUsers');
 count(query(collection(db, 'users'), where('status', '==', 'conflict')), '#stWait', '#stWaitBox');
 count(query(collection(db, 'feedback'), where('status', '==', 'new')), '#stFb', '#stFbBox');
+
+// Új hibák a statisztika legutóbbi megnyitása óta (JS hiba + felhasználónak megjelent hibaüzenet)
+const newErrors = async () => {
+    try {
+        let seen = {};
+        try { seen = JSON.parse(localStorage.getItem('qube_err_seen')) || {}; } catch { /* */ }
+        const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - i); return iso(d); });
+        const snaps = await Promise.all(days.map((k) => getDoc(doc(db, 'usageDaily', k)).catch(() => null)));
+        const total = (o) => Object.values(o || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+        const n = snaps.reduce((acc, sn, i) => {
+            if (!sn?.exists()) return acc;
+            const c = total(sn.data().errors) + total(sn.data().warnings);
+            return acc + Math.max(0, c - (seen[days[i]] || 0));
+        }, 0);
+        const b = $('#errBadge');
+        b.textContent = `${n} új hiba`;
+        b.classList.toggle('hidden', !n);
+    } catch (e) { console.warn(e); }
+};
+newErrors();
 
 $('#cpVersion').textContent = `${APP.name} v${APP.version} · ${APP.build}`;
 registerHelp('settings');

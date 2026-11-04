@@ -65,7 +65,17 @@ export const feedback = (type = 'light') => {
 
 // ---------- Toast ----------
 let toastTimer = null;
+// Események a használati statisztikának (js/track.js) – ami a betöltése előtt
+// történik, a pufferben megvárja
+const emit = (kind, detail) => {
+    const ev = { kind, detail, t: Date.now() };
+    (window.__qubeEvents ||= []).push(ev);
+    if (window.__qubeEvents.length > 50) window.__qubeEvents.shift();
+    window.dispatchEvent(new CustomEvent('qube:event', { detail: ev }));
+};
+
 export const toast = (msg, type = 'info') => {
+    if (type === 'error') emit('warn', msg);
     const el = $('#toast');
     if (!el) return;
     el.textContent = msg;
@@ -389,6 +399,7 @@ let swReg = null;
 
 const applyUpdate = () => {
     const btn = $('#updateBtn');
+    emit('app', 'update-click');
     btn.disabled = true;
     btn.textContent = '⏳ Frissítés…';
     const waiting = swReg?.waiting;
@@ -409,6 +420,7 @@ const registerSW = () => {
         swReg = reg;
         const showUpdate = () => {
             const btn = $('#updateBtn');
+            if (btn.classList.contains('hidden')) emit('app', 'update-shown');
             btn.classList.remove('hidden');
             btn.onclick = applyUpdate;
         };

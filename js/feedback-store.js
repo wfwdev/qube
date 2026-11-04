@@ -6,7 +6,7 @@
 // ============================================================
 import { db, doc, getDoc, setDoc, serverTimestamp } from './firebase.js';
 import { APP } from './config.js';
-import { track } from './track.js';
+import { track, diagnostics } from './track.js';
 
 const OUTBOX = 'qube_fb_outbox';
 const MAX_ATTEMPTS = 6;
@@ -44,6 +44,8 @@ export const queueFeedback = (session, { type, module, text }) => {
         device: navigator.userAgent.slice(0, 200),
         attempts: 0
     };
+    // Hibabejelentéshez automatikusan: az utolsó események, készülék, hálózat, várakozó adatok
+    if (type === 'bug') { try { item.diag = diagnostics(); } catch { /* nem kritikus */ } }
     store([...load(), item]);
     track('send', type);
     return item;
