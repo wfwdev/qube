@@ -205,7 +205,8 @@ service cloud.firestore {
     // ============================================================
     match /feedback/{id} {
       allow create: if active()
-        && request.resource.data.keys().hasOnly(['uid', 'name', 'empId', 'type', 'module', 'text', 'status', 'createdAt', 'clientTime', 'version', 'device'])
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'empId', 'type', 'module', 'text', 'status', 'createdAt', 'clientTime', 'version', 'device', 'diag'])
+        && (!('diag' in request.resource.data) || request.resource.data.diag is map)
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.type in ['bug', 'idea']
         && request.resource.data.module is string && request.resource.data.module.size() <= 40
@@ -297,17 +298,17 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && validDay(request.resource.data.day)
         && id == request.resource.data.day + '_' + request.auth.uid
-        && request.resource.data.keys().hasOnly(['uid', 'name', 'day', 'modules', 'actions', 'errors', 'hours', 'sessions', 'time', 'last', 'device', 'log'])
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'day', 'modules', 'actions', 'errors', 'warnings', 'hours', 'perf', 'net', 'sync', 'sessions', 'time', 'last', 'device', 'log'])
         && (!('log' in request.resource.data) || request.resource.data.log.size() <= 600);
     }
 
     match /usageDaily/{day} {
       allow read, delete: if isAdmin();
       allow create: if active() && validDay(day)
-        && request.resource.data.keys().hasOnly(['modules', 'actions', 'errors', 'hours', 'sessions', 'time', 'users'])
+        && request.resource.data.keys().hasOnly(['modules', 'actions', 'errors', 'warnings', 'hours', 'perf', 'sessions', 'time', 'users'])
         && request.resource.data.users.keys().hasOnly([request.auth.uid]);
       allow update: if active()
-        && request.resource.data.keys().hasOnly(['modules', 'actions', 'errors', 'hours', 'sessions', 'time', 'users'])
+        && request.resource.data.keys().hasOnly(['modules', 'actions', 'errors', 'warnings', 'hours', 'perf', 'sessions', 'time', 'users'])
         && request.resource.data.users.diff(resource.data.get('users', {})).affectedKeys().hasOnly([request.auth.uid]);
     }
 

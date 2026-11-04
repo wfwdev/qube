@@ -710,3 +710,15 @@ body.dark-mode .cal-day.t-workSat { background: #45300f; color: #fbbf24; }
 .st-ev.ev-start { font-weight: 700; color: var(--accent); }
 .st-ev.ev-action { color: var(--orange); }
 .st-ev.ev-error { color: #e11d48; }
+.fb-diag { border: 1px solid var(--bord); border-radius: 12px; padding: 10px 12px; background: var(--sur2); }
+.fb-diag summary { font-weight: 700; font-size: .9rem; cursor: pointer; }
+.fb-diag-log { margin-top: 8px; max-height: 220px; overflow-y: auto; font-size: .68rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+.st-grp { display: block; width: 100%; text-align: left; border: 0; background: 0; color: var(--tx); }
+.st-grp:active { background: var(--sur2); }
+.st-grp .mono { color: #e11d48; word-break: break-word; }
+.st-grp .mono.st-warn, .st-warn { color: #b45309; }
+body.dark-mode .st-grp .mono.st-warn, body.dark-mode .st-warn { color: #fbbf24; }
+.st-cnt { flex: none; font-weight: 800; font-size: .8rem; }
+.st-ev.ev-warn { color: #b45309; }
+.st-ev.ev-net, .st-ev.ev-slow { color: var(--tx2); }
+.cp-badge { flex: none; font-size: .7rem; font-weight: 800; padding: 3px 8px; border-radius: 10px; background: #e11d48; color: #fff; }

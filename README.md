@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.12.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
+**Állapot:** v2.13.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
 
 ## Felépítés
 
@@ -126,6 +126,8 @@ Ha az admin új eszközről „Összekapcsolás folyamatban” állapotba kerül
 - Gyűjtés (`js/track.js`): oldalanként a látható idő, megnyitások óránként, munkamenetek (30 perc szünet = új), műveletek (`track('generate')` stb.), JS hibák, készülék / app verzió. Jelszó, kód, MES adat nem.
 - A telefonon gyűlik, legfeljebb 2 percenként, illetve háttérbe tételkor egy batch-ben megy fel: `usage/{nap}_{uid}` (napi összesítő + idővonal, max. 400 bejegyzés) és `usageDaily/{nap}` (napi összesítő a trendhez). Csak admin olvashatja.
 - Megtekintés: Vezérlőpult → **📊 Használati statisztika** (Áttekintés / Modulok / Emberek / Eszközök). Ki/be: Vezérlőpult → **Adatgyűjtés**. 90 napnál régebbi adat törölhető.
+- Hibakereséshez: a felhasználónak megjelent hibaüzenetek (`toast(..., 'error')`), betöltési idő, offline szakaszok, feltöltésre váró adatok (IC napló, visszajelzés), frissítés gomb megjelenése / megnyomása. JS hibák és hibaüzenetek csoportosítva; a Vezérlőpulton „új hiba” jelzés (a statisztika utolsó megnyitásához képest, telefononként).
+- Hibabejelentéskor a `diagnostics()` (utolsó 30 esemény, készülék, hálózat, várakozó adatok) a `feedback` dokumentum `diag` mezőjébe kerül.
 - Új művelet mérése egy modulban: `import { track } from './track.js'; track('muvelet', 'opcionális részlet');` – a felirat a `js/stats.js` `ACTIONS` listájába kerül.
 
 ## Súgó és visszajelzés

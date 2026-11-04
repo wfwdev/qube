@@ -44,8 +44,11 @@
             <div class="minimal-card"><div class="st-hours" id="hours"></div></div>
             <h6 class="cp-group">Műveletek</h6>
             <div class="minimal-card p-2" id="actions"></div>
-            <h6 class="cp-group">Hibák</h6>
+            <h6 class="cp-group">🐞 JS hibák (csoportosítva)</h6>
             <div class="minimal-card p-2" id="errors"></div>
+            <h6 class="cp-group">⚠️ Hibaüzenetek, amiket a felhasználók láttak</h6>
+            <div class="minimal-card p-2" id="warnings"></div>
+            <div class="text-muted tiny mt-2">Koppints egy sorra: ki, mikor kapta.</div>
             <h6 class="cp-group">Karbantartás</h6>
             <div class="minimal-card">
                 <p class="text-muted small mb-2">A statisztika minden felhasználónál naponta egy dokumentum. A 90 napnál régebbi adatok törölhetők, hogy ne foglalják a helyet.</p>
@@ -56,7 +59,10 @@
         <!-- MODULOK -->
         <section id="tab-modules" class="hidden">
             <div class="minimal-card p-2" id="modules"></div>
-            <div class="text-muted tiny mt-2">Idő: amíg az oldal a képernyőn volt (háttérben nem számít).</div>
+            <div class="text-muted tiny mt-2">Idő: amíg az oldal a képernyőn volt (háttérben nem számít). Betöltés: megnyitástól a használható állapotig.</div>
+            <h6 class="cp-group">Folyamatok (megnyitotta → elvégezte)</h6>
+            <div class="minimal-card p-2" id="funnels"></div>
+            <div class="text-muted tiny mt-2">Egy alkalom = egy ember egy napja. Ha sokan megnyitják, de nem csinálják meg, ott valami nehézkes lehet.</div>
         </section>
 
         <!-- FELHASZNÁLÓK -->
@@ -64,12 +70,20 @@
             <input type="search" id="stSearch" class="form-control mb-2" placeholder="Keresés névre">
             <div class="minimal-card p-2" id="users"></div>
             <div class="text-muted tiny mt-2">Koppints valakire a részletes idővonalért.</div>
+            <h6 class="cp-group" id="inactiveTitle">Nem használta ebben az időszakban</h6>
+            <div class="minimal-card p-2" id="inactive"></div>
         </section>
 
         <!-- ESZKÖZÖK -->
         <section id="tab-devices" class="hidden">
             <h6 class="cp-group mt-0">App verzió</h6>
             <div class="minimal-card p-2" id="versions"></div>
+            <h6 class="cp-group">Régi verzión maradtak</h6>
+            <div class="minimal-card p-2" id="outdated"></div>
+            <h6 class="cp-group">Feltöltésre váró adatok (beragadt)</h6>
+            <div class="minimal-card p-2" id="sync"></div>
+            <h6 class="cp-group">Átlagos betöltési idő rendszerenként</h6>
+            <div class="minimal-card p-2" id="perfOs"></div>
             <h6 class="cp-group">Telepítve (PWA) vagy böngészőben</h6>
             <div class="minimal-card p-2" id="pwa"></div>
             <h6 class="cp-group">Rendszer</h6>
