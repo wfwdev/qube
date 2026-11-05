@@ -763,3 +763,24 @@ body.screen-open .upd-bar, body.qr-open .upd-bar, body.menu-open .upd-bar { disp
 .update-btn { animation: none; box-shadow: none; }
 /* amíg a sáv látszik, az oldal alja ne bújjon alá */
 body.upd-on .app-main { padding-bottom: calc(var(--bottom-h) + env(safe-area-inset-bottom) + 96px); }
+
+/* ---------- 22. Új felhasználók / szerepkör-kérések ---------- */
+.st-new { background: rgba(206, 68, 89, .14); color: #ce4459; }
+.review-box { padding: 14px; border-radius: 14px; background: rgba(206, 68, 89, .06); border: 1px solid rgba(206, 68, 89, .3); }
+.review-card {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;
+    border-radius: 16px; text-decoration: none; color: var(--tx);
+    background: var(--sur); border: 1px solid rgba(206, 68, 89, .35); box-shadow: 0 4px 14px rgba(206, 68, 89, .12);
+}
+.review-card:active { transform: scale(.98); }
+.review-card b { display: block; font-size: .92rem; }
+.review-card small { display: block; font-size: .74rem; color: var(--tx2); }
+.review-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; background: rgba(206, 68, 89, .1); }
+.bottom-nav button { position: relative; }
+.nav-badge {
+    position: absolute; top: 4px; left: calc(50% + 6px); min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 9px; background: #e11d48; color: #fff; font-size: .62rem; font-weight: 800; line-height: 17px; text-align: center;
+}
+.role-req-link { display: block; margin-top: 6px; padding: 0; border: 0; background: 0; color: var(--accent); font-size: .76rem; font-weight: 700; }
+/* Vezérlőpult: 4 számláló 2×2-ben */
+.cp-stats { grid-template-columns: repeat(2, 1fr); }

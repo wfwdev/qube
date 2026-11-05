@@ -37,6 +37,8 @@ service cloud.firestore {
     // Ugyanaz a minta, mint a js/config.js EMP_ID_PATTERN-je!
     function validEmpId(e) { return e is string && e.matches('^[0-9]{3,10}$'); }
     function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    // Kérhető szerepkör: létező, nem admin
+    function validRequest(r) { return r is string && r != 'admin' && r.size() <= 30 && exists(rolePath(r)); }
 
     // ---------- Felhasználók ----------
     match /users/{uid} {
@@ -45,7 +47,9 @@ service cloud.firestore {
       // Regisztráció: csak saját magát, operátorként.
       // 'active' csak akkor lehet, ha ugyanabban a batch-ben a törzsszámot is lefoglalta.
       allow create: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name', 'empId', 'role', 'status', 'createdAt', 'lastActive'])
+        && request.resource.data.keys().hasOnly(['name', 'empId', 'role', 'status', 'createdAt', 'lastActive', 'reviewed', 'requestedRole'])
+        && (!('reviewed' in request.resource.data) || request.resource.data.reviewed == false)
+        && (!('requestedRole' in request.resource.data) || validRequest(request.resource.data.requestedRole))
         && validName(request.resource.data.name)
         && validEmpId(request.resource.data.empId)
         && request.resource.data.role == 'operator'
@@ -63,6 +67,13 @@ service cloud.firestore {
           && changed().hasOnly(['name', 'lastActive'])
           && validName(request.resource.data.name)
           && (!('lastActive' in changed()) || request.resource.data.lastActive == request.time))
+        // 1b) Saját magának: másik szerepkör kérése (a vezetők jóváhagyják)
+        || (signedIn() && request.auth.uid == uid
+          && resource.data.status == 'active'
+          && changed().hasOnly(['requestedRole', 'reviewed'])
+          && request.resource.data.reviewed == false
+          && validRequest(request.resource.data.requestedRole)
+          && request.resource.data.requestedRole != resource.data.role)
         // 2) Admin: bármit
         || isAdmin()
         // 3) Vezető (users.manage): nem-admin fiók szerepköre és aktív/letiltott állapota
@@ -72,7 +83,7 @@ service cloud.firestore {
           && request.resource.data.role != 'admin'
           && resource.data.status in ['active', 'disabled']
           && request.resource.data.status in ['active', 'disabled']
-          && changed().hasOnly(['role', 'status'])
+          && changed().hasOnly(['role', 'status', 'reviewed', 'requestedRole'])
           && exists(rolePath(request.resource.data.role)))
         // 4) Admin vészkijárat: összekapcsolásra váró fiók egy egyszer használatos
         //    vészkóddal (a kód ugyanebben a lépésben törlődik) visszaveszi az admin jogot

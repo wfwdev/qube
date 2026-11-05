@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.14.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
+**Állapot:** v2.15.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
 
 ## Felépítés
 
@@ -112,6 +112,13 @@ Ha az admin új eszközről „Összekapcsolás folyamatban” állapotba kerül
 - **Munkanap-áthelyezések:** a 2026-os rendelet beépítve (`js/hu-calendar.js` → `BUILTIN_SWAPS`). Új évet az admin a **Beállítások → Munkanap-áthelyezések** részen vesz fel (beépített is kikapcsolható). Firestore: `settings/app.calendar.swapList`.
 - **Műszak:** 3 műszak (DE 06–14, DU 14–22, É 22–06) heti forgással, vagy nappalos. Csak a telefonon tárolódik.
 - **Szabadság:** napra koppintva bejelölhető, jóváhagyás nincs; mindenki látja a többiekét (`leave/{uid}`). Az éves keret csak a tulajdonosé (`leaveQuota/{uid}`).
+
+## Új felhasználók és szerepkör-kérés
+
+- Regisztrációkor a felhasználó kiválasztja a munkakörét. Biztonsági okból mindenki `operator`-ként indul; a választott szerepkör `requestedRole`-ként kerül a profilba, és `reviewed: false` jelzi, hogy vezetőnek át kell néznie.
+- Később a ☰ menüben is kérhet másik szerepkört („Más szerepkör kell?”).
+- Vezetők (`users.manage`) és admin: kezdőlapi kártya + jelvény az alsó menüben, Vezérlőpult számláló, Felhasználók → **Új / kérés** szűrő; a felhasználó lapján **Jóváhagyom** / **Elutasítom** (vagy kézi szerepkör + Mentés). Mentéskor a kérés lezárul (`reviewed: true`).
+- Szabályok: admin szerepkör nem kérhető; a kérő csak a `requestedRole`/`reviewed` mezőt írhatja, a jóváhagyás a vezető joga.
 
 ## Profilképek
 
