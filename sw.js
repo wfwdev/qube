@@ -27,6 +27,7 @@ const APP_SHELL = [
     './olvaso-teszt.html',
     './style.css',
     './manifest.json',
+    './changelog.json',
     './icons/icon.svg',
     './icons/logo.svg',
     './icons/icon-192.png',

@@ -3,7 +3,7 @@
 Gyári kódok, egy helyen. Telefonra telepíthető PWA (vanilla JS) a gyártósori munkához:
 IC generálás, MES terminál belépés QR-ral, csomagoló kódok – szerepkör alapú jogosultsággal.
 
-**Állapot:** v2.13.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
+**Állapot:** v2.14.0 – alapmodul, IC generátor, MES terminál, csomagoló kód és munkaidő naptár kész.
 
 ## Felépítés
 
@@ -140,6 +140,12 @@ Ha az admin új eszközről „Összekapcsolás folyamatban” állapotba kerül
 Vezérlőpult: az alsó menü **⚙️ Beállítások** gombja, csak az adminnak látszik (`admin.only` – szerepkörhöz nem rendelhető). A **👥 Felhasználók** is az alsó menüben van (`users.view`); ezeknek nincs csempéjük (`tile: false`). Felül számlálók (aktív / várakozó / új visszajelzés), alatta csoportosított lista gyors kapcsolókkal; a részletek aloldalakon (`#advent`, `#swaps`, `#recovery`). Firestore: `settings/app`, mindenki olvassa, csak admin írja.
 
 - **Adventi naptár:** be/ki, hóesés be/ki, a 24 napi üzenet szerkeszthető, előnézet bármelyik napra. December 1–24. között naponta egy újabb ablak nyitható, 25–31. között mind. A kinyitott ablakok telefononként tárolódnak.
+
+## Frissítés jelzés és változásnapló
+
+- Új verziónál a fejléc 🔄 gombja mellett alul, az alsó menü fölött egy sáv jelenik meg: „Új verzió (vX) · N újdonság · Mi új?” + **Később** / **Frissítés**. A „Később” 2 órára elrejti (a fejléc gomb marad); a döntés mindig a felhasználóé.
+- Az újdonságok a `changelog.json`-ból jönnek – a már letöltött új verzió gyorsítótárából, így internet nélkül is. Frissítés után rövid „✅ Frissítve” jelzés.
+- **Minden kiadásnál** új bejegyzés kell a `changelog.json` elejére, ugyanazzal a verzióval, mint a `js/config.js` – különben a kiadás ellenőrzése leáll. Az elemek a felhasználóknak szólnak: rövid, közérthető mondatok.
 
 ## Kiadás (frissítés)
 

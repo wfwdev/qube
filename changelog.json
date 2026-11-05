@@ -1,0 +1,27 @@
+[
+  {
+    "v": "2.14.0",
+    "date": "2026. nov. 5.",
+    "items": [
+      "Új verziónál alul egy sáv jelzi a frissítést, „Mi új?” összefoglalóval",
+      "„Később” gombbal 2 órára elhalasztható – te döntöd el, mikor frissítesz",
+      "Frissítés után rövid „Frissítve” jelzés az újdonságokkal"
+    ]
+  },
+  {
+    "v": "2.13.0",
+    "date": "2026. nov. 3.",
+    "items": [
+      "Hibabejelentéskor a telefon csatolja a hibakereséshez szükséges adatokat",
+      "Gyorsabb hibajavítás: az admin látja, ha valami nem sikerült"
+    ]
+  },
+  {
+    "v": "2.10.0",
+    "date": "2026. nov. 2.",
+    "items": [
+      "Profilkép feltöltése a ☰ menüben",
+      "Munkaidő naptár: ünnepek, ledolgozós szombatok, műszak, szabadság"
+    ]
+  }
+]

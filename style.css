@@ -722,3 +722,44 @@ body.dark-mode .st-grp .mono.st-warn, body.dark-mode .st-warn { color: #fbbf24; 
 .st-ev.ev-warn { color: #b45309; }
 .st-ev.ev-net, .st-ev.ev-slow { color: var(--tx2); }
 .cp-badge { flex: none; font-size: .7rem; font-weight: 800; padding: 3px 8px; border-radius: 10px; background: #e11d48; color: #fff; }
+
+/* ---------- 21. Frissítés sáv ---------- */
+/* Az alsó menü fölött úszik be; nem takar ki semmit, a felhasználó dönt */
+.upd-bar {
+    position: fixed; left: 12px; right: 12px; z-index: 1010;
+    bottom: calc(var(--bottom-h) + env(safe-area-inset-bottom) + 10px);
+    display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 6px;
+    border-radius: 18px; background: var(--sur); border: 1px solid var(--bord);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .16), 0 0 0 1px rgba(206, 68, 89, .12);
+    transform: translateY(calc(100% + var(--bottom-h) + 30px)); opacity: 0; pointer-events: none;
+    transition: transform .45s cubic-bezier(.2, .9, .25, 1.1), opacity .3s;
+}
+.upd-bar.show { transform: none; opacity: 1; pointer-events: auto; }
+body.screen-open .upd-bar, body.qr-open .upd-bar, body.menu-open .upd-bar { display: none; }
+.upd-bar::before {
+    content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px; border-radius: 0 4px 4px 0;
+    background: var(--brand-grad);
+}
+.upd-bar.ok::before { background: #16a34a; }
+.upd-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; border: 0; background: 0; padding: 2px 4px 2px 8px; text-align: left; color: var(--tx); }
+.upd-ico {
+    flex: none; width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; background: var(--sur2);
+}
+.upd-txt { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.upd-txt b { font-size: .9rem; }
+.upd-txt small { font-size: .72rem; color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upd-later { flex: none; border: 0; background: 0; color: var(--tx2); font-size: .78rem; font-weight: 700; padding: 8px 6px; }
+.upd-go {
+    flex: none; border: 0; border-radius: 12px; padding: 9px 14px; font-size: .82rem; font-weight: 700;
+    color: #fff; background: var(--brand-grad); box-shadow: 0 3px 10px rgba(206, 68, 89, .3);
+}
+.upd-go:disabled { opacity: .7; }
+.upd-ver { margin-top: 6px; }
+.upd-list { padding-left: 20px; margin: 4px 0 10px; font-size: .9rem; }
+.upd-list li { margin-bottom: 3px; }
+.upd-changes { max-height: 55vh; overflow-y: auto; }
+/* A fejléc gomb visszafogottabb: a sáv viszi a figyelmet */
+.update-btn { animation: none; box-shadow: none; }
+/* amíg a sáv látszik, az oldal alja ne bújjon alá */
+body.upd-on .app-main { padding-bottom: calc(var(--bottom-h) + env(safe-area-inset-bottom) + 96px); }
