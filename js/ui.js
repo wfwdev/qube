@@ -144,6 +144,7 @@ const injectShell = () => {
 
     document.body.insertAdjacentHTML('beforeend', `
     <nav class="bottom-nav hidden" id="bottomNav"></nav>
+    <div class="upd-bar" id="updBar" role="status" aria-live="polite"></div>
     <div class="side-overlay" id="sideOverlay"></div>
     <aside class="side-menu" id="sideMenu"></aside>
     <div class="overlay" id="sheetOverlay"><div class="modal-custom" id="sheetBody"></div></div>
@@ -395,20 +396,145 @@ export const renderChrome = (session) => {
 };
 
 // ---------- Service Worker + frissítés jelzés ----------
+// Új verziónál: a fejléc kis gombja + alul egy sáv a "mi új" összefoglalóval.
+// A felhasználó dönt: Frissítés most, vagy Később (2 órára elrejti a sávot;
+// a fejléc gomb végig látszik, és onnan bármikor frissíthet).
 let swReg = null;
+const SNOOZE_KEY = 'qube_upd_snooze';      // { until, at }
+const FIRST_KEY = 'qube_upd_first';        // mikor jelent meg először (cache név → idő)
+const SEEN_VER_KEY = 'qube_seen_version';  // a legutóbb futtatott verzió ("Frissítve" jelzéshez)
+const SNOOZE_MS = 2 * 60 * 60 * 1000;
+
+const verNum = (v) => String(v || '0').split('.').map((x) => parseInt(x, 10) || 0);
+const newer = (a, b) => { const x = verNum(a), y = verNum(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+const lsJson = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+
+// A változásnapló a már letöltött (várakozó) verzió gyorsítótárából – internet sem kell hozzá
+const readChangelog = async (fromNew) => {
+    const url = new URL('changelog.json', location.href).href;
+    try {
+        if (!fromNew) return await (await fetch(url)).json();
+        let best = null;
+        for (const name of await caches.keys()) {
+            if (!name.startsWith('qube-') || name === 'qube-cdn-v1') continue;
+            const res = await (await caches.open(name)).match(url, { ignoreSearch: true });
+            if (!res) continue;
+            const log = await res.json().catch(() => null);
+            if (log?.[0]?.v && (!best || newer(log[0].v, best[0].v))) best = log;
+        }
+        return best;
+    } catch { return null; }
+};
+const changesSince = (log, from) => (Array.isArray(log) ? log : []).filter((x) => newer(x.v, from));
+
+const changesHtml = (list) => list.length ? list.map((x) => `
+    <div class="upd-ver"><b>v${esc(x.v)}</b>${x.date ? ` <span class="text-muted tiny">${esc(x.date)}</span>` : ''}</div>
+    <ul class="upd-list">${(x.items || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`).join('')
+    : '<p class="text-muted small">Javítások és fejlesztések.</p>';
+
+const openChanges = (list, withButton) => {
+    feedback();
+    const sheet = openSheet(`
+        <h5 class="fw-bold mb-3">${withButton ? '✨ Mi újság az új verzióban?' : '✨ Újdonságok'}</h5>
+        <div class="upd-changes">${changesHtml(list)}</div>
+        ${withButton ? `
+        <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-light flex-grow-1" id="updSheetLater">Később</button>
+            <button class="btn btn-primary flex-grow-1" id="updSheetGo">Frissítés most</button>
+        </div>
+        <div class="text-muted tiny text-center mt-2">Pár másodperc, az adataid megmaradnak.</div>`
+        : '<button class="btn btn-primary w-100 mt-3" id="updSheetOk">Rendben</button>'}`);
+    $('#updSheetGo', sheet)?.addEventListener('click', () => { closeSheet(); applyUpdate(); });
+    $('#updSheetLater', sheet)?.addEventListener('click', () => { closeSheet(); snooze(); });
+    $('#updSheetOk', sheet)?.addEventListener('click', closeSheet);
+};
+
+const hideBar = () => {
+    const bar = $('#updBar');
+    bar?.classList.remove('show');
+    document.body.classList.remove('upd-on');
+};
+
+const snooze = () => {
+    emit('app', 'update-later');
+    localStorage.setItem(SNOOZE_KEY, JSON.stringify({ until: Date.now() + SNOOZE_MS }));
+    hideBar();
+    barShown = false; // a "Később" lejárta után (előtérbe kerüléskor) újra jöhet
+    toast('Rendben – a fejlécben lévő gombbal bármikor frissíthetsz.');
+};
+
+const snoozed = () => (lsJson(SNOOZE_KEY, {}).until || 0) > Date.now();
 
 const applyUpdate = () => {
     const btn = $('#updateBtn');
     emit('app', 'update-click');
     btn.disabled = true;
     btn.textContent = '⏳ Frissítés…';
+    const go = $('#updGo');
+    if (go) { go.disabled = true; go.textContent = '⏳ Frissítés…'; }
+    localStorage.removeItem(SNOOZE_KEY);
     const waiting = swReg?.waiting;
     if (waiting) waiting.postMessage({ type: 'SKIP_WAITING' });
     // Ha 4 mp alatt nem vált át (pl. a várakozó verzió közben megszűnt), sima újratöltés
     setTimeout(() => location.reload(), waiting ? 4000 : 0);
 };
 
+// Alsó sáv: "Új verzió érhető el" – nem takar ki semmit, nem kötelező
+let barShown = false;
+const showBar = async () => {
+    if (barShown || snoozed() || document.body.classList.contains('screen-open')) return;
+    barShown = true;
+    const log = await readChangelog(true);
+    const list = changesSince(log, APP.version);
+    const newV = list[0]?.v || log?.[0]?.v || '';
+    const items = list.flatMap((x) => x.items || []);
+
+    // mióta vár
+    const firsts = lsJson(FIRST_KEY, {});
+    const key = newV || 'ismeretlen';
+    if (!firsts[key]) { firsts[key] = Date.now(); localStorage.setItem(FIRST_KEY, JSON.stringify(firsts)); }
+    const days = Math.floor((Date.now() - firsts[key]) / 86400000);
+
+    const bar = $('#updBar');
+    bar.innerHTML = `
+        <button class="upd-info" id="updInfo">
+            <span class="upd-ico">✨</span>
+            <span class="upd-txt">
+                <b>Új verzió${newV ? ` (v${esc(newV)})` : ''}</b>
+                <small>${items.length ? `${items.length} újdonság · ` : ''}${days >= 1 ? `${days} napja elérhető · ` : ''}Mi új? ›</small>
+            </span>
+        </button>
+        <button class="upd-later" id="updLater" aria-label="Később">Később</button>
+        <button class="upd-go" id="updGo">Frissítés</button>`;
+    $('#updInfo').addEventListener('click', () => openChanges(list, true));
+    $('#updLater').addEventListener('click', () => { feedback(); snooze(); });
+    $('#updGo').addEventListener('click', () => { feedback(); applyUpdate(); });
+    // kis késleltetéssel csúszik be, hogy ne az oldal betöltésével együtt ugorjon
+    setTimeout(() => { bar.classList.add('show'); document.body.classList.add('upd-on'); }, 1200);
+};
+
+// Frissítés után: rövid "Frissítve" jelzés, koppintásra a változások
+const announceUpdated = async () => {
+    const prev = localStorage.getItem(SEEN_VER_KEY);
+    localStorage.setItem(SEEN_VER_KEY, APP.version);
+    if (!prev || !newer(APP.version, prev)) return;
+    const list = changesSince(await readChangelog(false), prev);
+    const bar = $('#updBar');
+    bar.innerHTML = `
+        <button class="upd-info" id="updInfo">
+            <span class="upd-ico">✅</span>
+            <span class="upd-txt"><b>Frissítve: v${esc(APP.version)}</b><small>${list.length ? 'Nézd meg, mi új ›' : 'Minden naprakész'}</small></span>
+        </button>
+        <button class="upd-later" id="updLater" aria-label="Bezárás">✕</button>`;
+    bar.classList.add('ok');
+    $('#updInfo').addEventListener('click', () => { hideBar(); openChanges(list, false); });
+    $('#updLater').addEventListener('click', hideBar);
+    setTimeout(() => { bar.classList.add('show'); document.body.classList.add('upd-on'); }, 800);
+    setTimeout(() => { if (!bar.classList.contains('ok')) return; hideBar(); setTimeout(() => bar.classList.remove('ok'), 400); }, 9000);
+};
+
 const registerSW = () => {
+    announceUpdated();
     if (!('serviceWorker' in navigator)) return;
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -422,7 +548,8 @@ const registerSW = () => {
             const btn = $('#updateBtn');
             if (btn.classList.contains('hidden')) emit('app', 'update-shown');
             btn.classList.remove('hidden');
-            btn.onclick = applyUpdate;
+            btn.onclick = () => { feedback(); readChangelog(true).then((log) => openChanges(changesSince(log, APP.version), true)); };
+            showBar();
         };
         if (reg.waiting && navigator.serviceWorker.controller) showUpdate();
         reg.addEventListener('updatefound', () => {
@@ -431,9 +558,11 @@ const registerSW = () => {
                 if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdate();
             });
         });
-        // Előtérbe kerüléskor frissítést keres
+        // Előtérbe kerüléskor frissítést keres (és ha a "Később" lejárt, újra szól)
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') reg.update().catch(() => {});
+            if (document.visibilityState !== 'visible') return;
+            reg.update().catch(() => {});
+            if (reg.waiting && !barShown) showBar();
         });
     }).catch((e) => console.warn('SW regisztráció sikertelen', e));
 };

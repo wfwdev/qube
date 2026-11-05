@@ -48,7 +48,8 @@ const ACTIONS = {
     'calendar:leave-remove': '🏖️ Szabadság törlés',
     'calendar:shift': '🔄 Műszak beállítás',
     'app:update-shown': '🔄 Frissítés gomb megjelent',
-    'app:update-click': '🔄 Frissítés gomb megnyomva'
+    'app:update-click': '🔄 Frissítés gomb megnyomva',
+    'app:update-later': '🔄 Frissítés elhalasztva (Később)'
 };
 // Folyamatok: megnyitotta a modult → elvégezte a fő műveletet
 const FUNNELS = [
