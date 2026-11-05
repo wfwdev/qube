@@ -98,6 +98,14 @@ if (!/^const VERSION = '[^']+';$/m.test(sw)) fail('sw.js', 'nem található a "c
 const fc = existsSync(join(ROOT, 'js/firebase-config.js')) ? read('js/firebase-config.js') : '';
 if (!/export const FIREBASE_CONFIG\s*=/.test(fc)) fail('js/firebase-config.js', 'nincs benne FIREBASE_CONFIG');
 else if (/IDE_JON|PROJEKT-ID/.test(fc)) fail('js/firebase-config.js', 'még a minta adatok vannak benne – írd be a Firebase projekt adatait');
+// ---------- 7) Változásnapló: a legfrissebb bejegyzés = az app verziója ----------
+{
+    const ver = (read('js/config.js').match(/version:\s*'([^']+)'/) || [])[1];
+    let log = null;
+    try { log = JSON.parse(read('changelog.json')); } catch (e) { fail('changelog.json', `hibás vagy hiányzó JSON: ${e.message}`); }
+    if (log && (!Array.isArray(log) || !log[0]?.v || !Array.isArray(log[0].items))) fail('changelog.json', 'a formátum: [{ "v": "x.y.z", "date": "...", "items": ["..."] }, ...]');
+    else if (log && ver && log[0].v !== ver) fail('changelog.json', `az első bejegyzés (${log[0].v}) nem egyezik az app verziójával (${ver}) – írd be az újdonságokat`);
+}
 if (!/build:\s*'dev'/.test(read('js/config.js'))) fail('js/config.js', "nem található a build: 'dev' sor (a kiadás ide írja a verziót)");
 
 // ---------- Eredmény ----------
