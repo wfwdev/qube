@@ -126,7 +126,8 @@ const HELP = {
         html: `
             <h6>Felhasználók</h6>
             <ul>
-                <li>Keresés névre vagy törzsszámra; szűrés: <b>Mind</b>, <b>Várakozó</b>, <b>Letiltott</b>.</li>
+                <li>Keresés névre vagy törzsszámra; szűrés: <b>Mind</b>, <b>Új / kérés</b>, <b>Várakozó</b>, <b>Letiltott</b>.</li>
+                <li><b>Új / kérés:</b> az új regisztrálók és akik másik szerepkört kértek (regisztrációkor vagy a ☰ menüben). Koppints rájuk: <b>Jóváhagyom</b> egy gombnyomással megadja a kért szerepkört, vagy maradhat a mostani. A kezdőlapon és az alsó menüben jelzés mutatja, ha van ilyen.</li>
                 <li>Egy felhasználóra koppintva módosítható a <b>szerepköre</b>, illetve <b>letiltható</b>.</li>
                 <li>A <b>Várakozó</b> fiókok új eszközről jelentkeztek be egy már regisztrált törzsszámmal – ezeket az adminisztrátor kapcsolja össze a régi fiókkal.</li>
             </ul>

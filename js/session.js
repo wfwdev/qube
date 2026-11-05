@@ -15,7 +15,7 @@
 // ============================================================
 import {
     auth, db, signInAnonymously, onAuthStateChanged,
-    doc, getDoc, setDoc, updateDoc, onSnapshot, writeBatch, serverTimestamp
+    doc, getDoc, getDocs, collection, setDoc, updateDoc, onSnapshot, writeBatch, serverTimestamp
 } from './firebase.js';
 import { NEW_USER_ROLE, EMP_ID_PATTERN, PERMISSIONS, APP } from './config.js';
 import { esc, $, feedback, toast, showScreen, hideScreen, renderChrome } from './ui.js';
@@ -69,10 +69,23 @@ const screenOnboarding = (uid) => {
             <label class="form-label">Teljes név</label>
             <input type="text" id="obName" class="form-control form-control-lg mb-3" maxlength="60" autocomplete="name" placeholder="Pl. Kiss János">
             <label class="form-label">Törzsszám</label>
-            <input type="text" id="obEmpId" class="form-control form-control-lg mb-4" inputmode="numeric" maxlength="10" placeholder="Pl. 10482">
+            <input type="text" id="obEmpId" class="form-control form-control-lg mb-3" inputmode="numeric" maxlength="10" placeholder="Pl. 10482">
+            <div id="obRoleBox" class="hidden">
+                <label class="form-label">Munkakör</label>
+                <select id="obRole" class="form-select form-select-lg mb-1"></select>
+                <div class="text-muted tiny mb-4">Ha nem operátor vagy, egy vezető hamarosan jóváhagyja – addig operátorként használhatod.</div>
+            </div>
+            <div class="mb-2"></div>
             <button class="btn btn-primary btn-lg w-100" id="obSave">Tovább</button>
             <a class="d-block text-center small mt-3" href="info.html">📱 Telepítés és tudnivalók</a>
         </div>`);
+
+    // Munkakör választás (a szerepkörök listájából; admin nem kérhető)
+    listRoles().then((list) => {
+        if (!list.length) return;
+        $('#obRole', s).innerHTML = list.map((r) => `<option value="${esc(r.id)}" ${r.id === NEW_USER_ROLE ? 'selected' : ''}>${esc(r.label)}</option>`).join('');
+        $('#obRoleBox', s).classList.remove('hidden');
+    });
 
     const btn = $('#obSave', s);
     btn.addEventListener('click', async () => {
@@ -84,7 +97,7 @@ const screenOnboarding = (uid) => {
 
         btn.disabled = true; btn.textContent = 'Mentés…';
         try {
-            await registerProfile(uid, name, empId);
+            await registerProfile(uid, name, empId, $('#obRole', s).value || NEW_USER_ROLE);
             feedback('success');
             // A profil-figyelő innen viszi tovább a folyamatot
         } catch (e) {
@@ -140,10 +153,14 @@ const screenForStatus = (d) => {
 // Törzsszám foglalás: empIds/{törzsszám} → { uid }.
 // Ha a törzsszám már másé, a fiók 'conflict' állapotba kerül, és egy
 // vezető kapcsolja össze a régi fiókkal (pl. telefoncsere, adattörlés után).
-const registerProfile = async (uid, name, empId) => {
+// Mindenki operátorként indul (biztonság); a választott munkakör "kérésként"
+// kerül a profilba, és a vezetők látják, hogy új felhasználó jött (reviewed: false).
+const registerProfile = async (uid, name, empId, wanted = NEW_USER_ROLE) => {
     const base = {
         name, empId,
         role: NEW_USER_ROLE,
+        reviewed: false,
+        ...(wanted && wanted !== NEW_USER_ROLE && wanted !== 'admin' ? { requestedRole: wanted } : {}),
         createdAt: serverTimestamp(),
         lastActive: serverTimestamp()
     };
@@ -164,6 +181,16 @@ const registerProfile = async (uid, name, empId) => {
         // Közben valaki más lefoglalta ezt a törzsszámot
         await setDoc(userRef, { ...base, status: 'conflict' });
     }
+};
+
+// ---------- Választható szerepkörök (regisztráció, szerepkör-kérés) ----------
+const listRoles = async () => {
+    try {
+        const snap = await getDocs(collection(db, 'roles'));
+        return snap.docs.filter((d) => d.id !== 'admin')
+            .map((d) => ({ id: d.id, label: d.data().label || d.id, rank: d.data().rank || 0 }))
+            .sort((a, b) => a.rank - b.rank);
+    } catch { return []; }
 };
 
 // ---------- Szerepkör betöltése ----------
@@ -191,6 +218,15 @@ const buildSession = (c) => {
         user: { name: c.name, empId: c.empId },
         role: c.role,
         roleLabel: c.roleLabel,
+        get requestedRole() { return c.requestedRole || ''; },
+        listRoles,
+        // Másik szerepkör kérése – a vezetők jóváhagyják (Felhasználók → Új / kérés)
+        requestRole: async (roleId) => {
+            await updateDoc(doc(db, 'users', c.uid), { requestedRole: roleId, reviewed: false });
+            const cur = readCache();
+            if (cur?.uid === c.uid) writeCache({ ...cur, requestedRole: roleId });
+            c.requestedRole = roleId;
+        },
         roleMissing: !!c.roleMissing,
         perms,
         isAdmin: c.role === 'admin',
@@ -324,6 +360,7 @@ const verify = async (cached, onActive) => {
                 empId: d.empId,
                 role: d.role,
                 roleLabel: role.label,
+                requestedRole: d.requestedRole || '',
                 roleMissing: !!role.missing,
                 status: d.status,
                 perms: [...role.perms]

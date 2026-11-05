@@ -3,7 +3,7 @@
 // ============================================================
 import { ready } from './session.js';
 import {
-    db, collection, doc, onSnapshot, getDoc, updateDoc, deleteDoc, setDoc, writeBatch
+    db, collection, doc, onSnapshot, getDoc, updateDoc, deleteDoc, setDoc, writeBatch, deleteField
 } from './firebase.js';
 import { PERMISSIONS, DEFAULT_ROLES, NEW_USER_ROLE, EMP_ID_PATTERN } from './config.js';
 import { esc, $, feedback, toast, openSheet, closeSheet } from './ui.js';
@@ -16,7 +16,9 @@ const isAdmin = session.isAdmin;
 
 let users = [];          // [{ id, ...data }]
 let roles = {};          // { roleId: { label, rank, permissions } }
-let filter = location.hash === '#varakozo' ? 'conflict' : 'all';
+let filter = location.hash === '#varakozo' ? 'conflict' : location.hash === '#uj' ? 'new' : 'all';
+// Új felhasználó / szerepkör-kérés: még nem nézte át vezető
+const isNew = (u) => u.reviewed === false && u.status !== 'merged' && u.status !== 'conflict';
 let search = '';
 
 const STATUS = {
@@ -62,11 +64,12 @@ const renderFilters = () => {
     const count = (st) => users.filter((u) => u.status === st).length;
     const chips = [
         ['all', 'Mind', users.filter((u) => u.status !== 'merged').length],
+        ['new', 'Új / kérés', users.filter(isNew).length],
         ['conflict', 'Várakozó', count('conflict')],
         ['disabled', 'Letiltott', count('disabled')]
     ];
     $('#filters').innerHTML = chips.map(([id, label, n]) =>
-        `<button class="chip ${filter === id ? 'active' : ''} ${id === 'conflict' && n ? 'chip-alert' : ''}" data-f="${id}">${label} <span>${n}</span></button>`
+        `<button class="chip ${filter === id ? 'active' : ''} ${(id === 'conflict' || id === 'new') && n ? 'chip-alert' : ''}" data-f="${id}">${label} <span>${n}</span></button>`
     ).join('');
 };
 
@@ -74,9 +77,10 @@ const renderUsers = () => {
     renderFilters();
     const q = search.toLowerCase();
     const list = users
-        .filter((u) => filter === 'all' ? u.status !== 'merged' : u.status === filter)
+        .filter((u) => filter === 'all' ? u.status !== 'merged' : filter === 'new' ? isNew(u) : u.status === filter)
         .filter((u) => !q || (u.name || '').toLowerCase().includes(q) || (u.empId || '').includes(q))
         .sort((a, b) => (a.status === 'conflict' ? -1 : 0) - (b.status === 'conflict' ? -1 : 0)
+            || (isNew(a) ? -1 : 0) - (isNew(b) ? -1 : 0)
             || (a.name || '').localeCompare(b.name || '', 'hu'));
 
     $('#userList').innerHTML = list.length ? list.map((u) => {
@@ -88,7 +92,8 @@ const renderUsers = () => {
                 <div class="fw-bold">${esc(u.name)} ${u.id === session.uid ? '<span class="me-badge">Én</span>' : ''}</div>
                 <div class="text-muted tiny">${esc(u.empId)} · ${esc(roleLabel(u.role))} · ${fmtTime(u.lastActive)}</div>
             </div>
-            ${u.status !== 'active' ? `<span class="status ${st.cls}">${esc(st.label)}</span>` : ''}
+            ${u.status !== 'active' ? `<span class="status ${st.cls}">${esc(st.label)}</span>`
+                : isNew(u) ? `<span class="status st-new">${u.requestedRole ? `Kér: ${esc(roleLabel(u.requestedRole))}` : 'Új'}</span>` : ''}
         </button>`;
     }).join('') : `<div class="text-center text-muted small py-4">Nincs találat.</div>`;
 };
@@ -139,6 +144,18 @@ const openUser = (id) => {
         body += `<div class="notice">Ez a fiók egy új eszközre lett áthelyezve.</div>`;
         if (isAdmin) body += `<button class="btn btn-outline-danger w-100 mt-3" id="uDelete">Régi fiók törlése</button>`;
     } else if (editable) {
+        if (isNew(u)) {
+            const req = u.requestedRole && u.requestedRole !== u.role && roles[u.requestedRole] ? u.requestedRole : '';
+            body += `
+            <div class="review-box mb-4">
+                <div class="fw-bold mb-1">${req ? `🙋 Szerepkör-kérés: ${esc(roleLabel(req))}` : '🆕 Új felhasználó'}</div>
+                <div class="text-muted small mb-3">${req
+                    ? `Jelenleg: <b>${esc(roleLabel(u.role))}</b>. Jóváhagyás után azonnal megkapja a(z) „${esc(roleLabel(req))}” jogosultságait.`
+                    : `Jelenleg: <b>${esc(roleLabel(u.role))}</b>. Ha más szerepkör kell neki, állítsd be lent, és mentsd.`}</div>
+                ${req ? `<button class="btn btn-primary w-100 mb-2" id="uApprove">✓ Jóváhagyom: ${esc(roleLabel(req))}</button>` : ''}
+                <button class="btn btn-light w-100" id="uReviewed">${req ? `Elutasítom – marad ${esc(roleLabel(u.role))}` : `✓ Rendben, marad ${esc(roleLabel(u.role))}`}</button>
+            </div>`;
+        }
         body += `
             <label class="form-label">Szerepkör</label>
             <select id="uRole" class="form-select mb-3" ${u.id === session.uid ? 'disabled' : ''}>${roleOptions}</select>
@@ -166,6 +183,8 @@ const openUser = (id) => {
     const sheet = openSheet(body);
     $('#uClose', sheet)?.addEventListener('click', closeSheet);
     $('#uSave', sheet)?.addEventListener('click', () => saveUser(u, sheet));
+    $('#uApprove', sheet)?.addEventListener('click', () => review(u, u.requestedRole, `Jóváhagyva: ${roleLabel(u.requestedRole)} ✓`));
+    $('#uReviewed', sheet)?.addEventListener('click', () => review(u, u.role, u.requestedRole ? 'Kérés elutasítva' : 'Átnézve ✓'));
     $('#uEmpSave', sheet)?.addEventListener('click', () => changeEmpId(u, $('#uEmp', sheet).value.trim()));
     $('#uLink', sheet)?.addEventListener('click', () => linkUser(u));
     $('#uDelete', sheet)?.addEventListener('click', () => removeUser(u));
@@ -177,13 +196,23 @@ const openUser = (id) => {
     });
 };
 
+// Átnézés: szerepkör beállítása + a kérés lezárása (eltűnik az "Új / kérés" listából)
+const reviewFields = (u) => (u.reviewed === false || u.requestedRole) ? { reviewed: true, requestedRole: deleteField() } : {};
+const review = async (u, role, msg) => {
+    if (!isAdmin && role === 'admin') return fail(null, 'Admin szerepet csak admin adhat.');
+    try {
+        await updateDoc(doc(db, 'users', u.id), { role, ...reviewFields(u) });
+        ok(msg); closeSheet();
+    } catch (e) { fail(e); }
+};
+
 const saveUser = async (u, sheet) => {
     const role = $('#uRole', sheet).value || u.role;
     const status = $('#uActive', sheet).checked ? 'active' : 'disabled';
-    if (role === u.role && status === u.status) return closeSheet();
+    if (role === u.role && status === u.status && !isNew(u)) return closeSheet();
     if (!isAdmin && role === 'admin') return fail(null, 'Admin szerepet csak admin adhat.');
     try {
-        await updateDoc(doc(db, 'users', u.id), { role, status });
+        await updateDoc(doc(db, 'users', u.id), { role, status, ...reviewFields(u) });
         ok('Mentve ✓'); closeSheet();
     } catch (e) { fail(e); }
 };
@@ -223,7 +252,7 @@ const linkUser = async (u) => {
 
         const batch = writeBatch(db);
         batch.set(empRef, { uid: u.id });
-        batch.update(doc(db, 'users', u.id), { role, status: 'active' });
+        batch.update(doc(db, 'users', u.id), { role, status: 'active', reviewed: true, requestedRole: deleteField() });
         if (old) batch.update(doc(db, 'users', old.id), { status: 'merged' });
         await batch.commit();
         ok('Összekapcsolva ✓'); closeSheet();

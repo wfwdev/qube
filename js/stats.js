@@ -49,7 +49,8 @@ const ACTIONS = {
     'calendar:shift': '🔄 Műszak beállítás',
     'app:update-shown': '🔄 Frissítés gomb megjelent',
     'app:update-click': '🔄 Frissítés gomb megnyomva',
-    'app:update-later': '🔄 Frissítés elhalasztva (Később)'
+    'app:update-later': '🔄 Frissítés elhalasztva (Később)',
+    'app:role-request': '🙋 Szerepkör-kérés'
 };
 // Folyamatok: megnyitotta a modult → elvégezte a fő műveletet
 const FUNNELS = [

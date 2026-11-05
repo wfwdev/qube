@@ -290,6 +290,7 @@ const count = async (q, el, alertBox) => {
 };
 count(query(collection(db, 'users'), where('status', '==', 'active')), '#stUsers');
 count(query(collection(db, 'users'), where('status', '==', 'conflict')), '#stWait', '#stWaitBox');
+count(query(collection(db, 'users'), where('reviewed', '==', false), where('status', '==', 'active')), '#stNew', '#stNewBox');
 count(query(collection(db, 'feedback'), where('status', '==', 'new')), '#stFb', '#stFbBox');
 
 // Új hibák a statisztika legutóbbi megnyitása óta (JS hiba + felhasználónak megjelent hibaüzenet)

@@ -22,6 +22,33 @@ if (session.roleMissing) {
     checkRolesSeeded();
 }
 
+// Saját szerepkör-kérés állapota
+if (session.requestedRole && session.requestedRole !== session.role) {
+    session.listRoles().then((list) => {
+        const r = list.find((x) => x.id === session.requestedRole);
+        $('#reqNotice').innerHTML = `<div class="notice">⏳ A(z) <b>${esc(r?.label || session.requestedRole)}</b> szerepkör kérésed jóváhagyásra vár. Addig a jelenlegi jogosultságaiddal használhatod a Qube-ot.</div>`;
+    });
+}
+
+// Vezetőknek: új felhasználók / szerepkör-kérések (1 olvasás – a szerver számol)
+if (session.can('users.manage')) {
+    (async () => {
+        try {
+            const { db, collection, query, where, getCountFromServer } = await import('./firebase.js');
+            const n = (await getCountFromServer(query(collection(db, 'users'), where('reviewed', '==', false), where('status', '==', 'active')))).data().count;
+            if (!n) return;
+            $('#reviewNotice').innerHTML = `
+                <a class="review-card" href="admin.html#uj">
+                    <span class="review-ico">👋</span>
+                    <span class="flex-grow-1"><b>${n} új felhasználó vagy szerepkör-kérés</b><small>Nézd át, hogy mindenki a megfelelő jogosultságot kapja</small></span>
+                    <span class="cp-chev">›</span>
+                </a>`;
+            const nav = document.querySelector('#bottomNav [data-nav="admin"]');
+            if (nav && !nav.querySelector('.nav-badge')) nav.insertAdjacentHTML('beforeend', `<span class="nav-badge">${n}</span>`);
+        } catch (e) { console.warn(e); }
+    })();
+}
+
 async function checkRolesSeeded() {
     try {
         const { db, collection, getDocs, limit, query } = await import('./firebase.js');

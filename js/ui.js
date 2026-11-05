@@ -181,6 +181,9 @@ export const openSideMenu = () => {
                 <div class="fw-bold">${esc(u.name)}</div>
                 <div class="text-muted small">Törzsszám: <b>${esc(u.empId)}</b></div>
                 <span class="role-badge mt-1">${esc(sessionRef.roleLabel)}</span>
+                ${sessionRef.isAdmin ? '' : sessionRef.requestedRole && sessionRef.requestedRole !== sessionRef.role
+                    ? '<div class="text-muted tiny mt-1">⏳ Szerepkör-kérés jóváhagyásra vár</div>'
+                    : '<button class="role-req-link" id="roleReq">Más szerepkör kell?</button>'}
             </div>
         </div>
         <div id="avPanel" class="av-panel hidden"></div>
@@ -246,6 +249,7 @@ export const openSideMenu = () => {
     });
 
     if (u) setupAvatar(u);
+    $('#roleReq')?.addEventListener('click', openRoleRequest);
 
     clearTimeout(menuCloseTimer);
     menu.classList.add('open');
@@ -310,6 +314,32 @@ const setupAvatar = async (u) => {
                 showMenu();
             }
         });
+    });
+};
+
+// Szerepkör-kérés: a vezetők a Felhasználók → "Új / kérés" alatt hagyják jóvá
+const openRoleRequest = async () => {
+    feedback();
+    if (!navigator.onLine) return toast('Ehhez internet kell.', 'error');
+    const list = (await sessionRef.listRoles()).filter((r) => r.id !== sessionRef.role);
+    if (!list.length) return toast('Nincs más választható szerepkör.');
+    closeSideMenu();
+    const sheet = openSheet(`
+        <h5 class="fw-bold mb-1">Szerepkör kérése</h5>
+        <p class="text-muted small mb-3">Jelenleg: <b>${esc(sessionRef.roleLabel)}</b>. Válaszd ki, milyen munkakörben dolgozol – egy vezető jóváhagyja, és utána automatikusan megkapod a hozzá tartozó modulokat.</p>
+        <select id="rrRole" class="form-select form-select-lg mb-3">${list.map((r) => `<option value="${esc(r.id)}">${esc(r.label)}</option>`).join('')}</select>
+        <div class="d-flex gap-2">
+            <button class="btn btn-light flex-grow-1" id="rrCancel">Mégsem</button>
+            <button class="btn btn-primary flex-grow-1" id="rrSend">Kérés küldése</button>
+        </div>`);
+    $('#rrCancel', sheet).addEventListener('click', closeSheet);
+    $('#rrSend', sheet).addEventListener('click', async (e) => {
+        e.currentTarget.disabled = true;
+        try {
+            await sessionRef.requestRole($('#rrRole', sheet).value);
+            emit('app', 'role-request');
+            feedback('success'); toast('Kérés elküldve – egy vezető hamarosan jóváhagyja.', 'success'); closeSheet();
+        } catch (err) { console.error(err); feedback('error'); toast('Nem sikerült elküldeni.', 'error'); e.currentTarget.disabled = false; }
     });
 };
 
