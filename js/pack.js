@@ -1,8 +1,8 @@
 // ============================================================
 // Csomagoló kód
 // Egy számkód, CSAK ezen a telefonon tárolva (Qube-fiókonként külön),
-// a szerverre nem kerül fel. A QR pontosan a számot tartalmazza –
-// nincs utána TAB, ENTER vagy F4.
+// a szerverre nem kerül fel. A QR tartalma: szám + TAB + ENTER
+// (a terminálon a következő mezőre lép, majd jóváhagy).
 // ============================================================
 import { ready } from './session.js';
 import { $, feedback, toast, setPageTabs } from './ui.js';
@@ -101,7 +101,7 @@ const showQr = async () => {
     feedback('success');
     track('qr');
     $('#packQr').innerHTML = '';
-    new QRCode($('#packQr'), { text: d.code, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+    new QRCode($('#packQr'), { text: `${d.code}\t\r`, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
     $('#packQrText').textContent = d.code;
     $('#qrFullscreen').classList.remove('hidden');
     document.body.classList.add('qr-open');

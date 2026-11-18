@@ -59,7 +59,7 @@ const HELP = {
                 <li>Add meg a csomagoló kódodat (csak számjegyek), majd <b>Mentés</b>.</li>
                 <li>A <b>QR megjelenítése</b> gombbal bármikor előhívhatod, és lecsippanthatod.</li>
             </ol>
-            <p>A QR pontosan a számot tartalmazza.</p>
+            <p>A QR a számot tartalmazza, utána <b>TAB</b> és <b>ENTER</b> – a terminálon a beolvasás után magától továbblép és jóváhagy.</p>
             <h6>Jó tudni</h6>
             <ul>
                 <li>A kód <b>csak ezen a telefonon</b> tárolódik.</li>
