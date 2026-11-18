@@ -1,5 +1,12 @@
 [
   {
+    "v": "2.15.2",
+    "date": "2026. nov. 18.",
+    "items": [
+      "Csomagoló kód: a QR a szám után TAB-ot és ENTER-t is küld, így a terminálon nem kell kézzel továbblépni"
+    ]
+  },
+  {
     "v": "2.15.0",
     "date": "2026. nov. 5.",
     "items": [
